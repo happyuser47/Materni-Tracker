@@ -7,7 +7,7 @@ import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-  const { user: authUser } = useAuth();
+  const { user: authUser, isSuperAdmin } = useAuth();
   const handleModifyList = async (type, action, value, id = null) => {
     if (action === 'add') {
       const { data } = await supabase.from('custom_lists').insert({ list_type: type, value }).select().single();
@@ -680,15 +680,29 @@ export const AppProvider = ({ children }) => {
   };
 
   const handleDeleteStaff = (id) => {
+    const staff = staffMembers.find(s => s.id === id);
+    if (!staff) return;
+
+    // PROTECTION: Cannot delete Dr. Usama Akram (Super Admin)
+    if (staff.email === 'usama786@gmail.com') {
+      setToastMessage({ type: 'error', text: 'Dr. Usama Akram is the Super Admin and cannot be removed.' });
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
+    // PROTECTION: Only Super Admin can delete other Admins
+    if (staff.role === 'Admin' && !isSuperAdmin) {
+      setToastMessage({ type: 'error', text: 'Only the Super Admin can remove other Admin accounts.' });
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
     if (staffMembers.length === 1) return;
     if (currentUser?.id === id) {
       setToastMessage({ type: 'error', text: 'You cannot remove your own account while logged in.' });
       setTimeout(() => setToastMessage(null), 3000);
       return;
     }
-
-    const staff = staffMembers.find(s => s.id === id);
-    if (!staff) return;
 
     requestConfirm(
       `Are you sure you want to remove ${staff.name} from the system? This will also permanently delete their login account.`,
@@ -704,7 +718,6 @@ export const AppProvider = ({ children }) => {
           setStaffMembers(prev => prev.filter(s => s.id !== id));
           
           // CRITICAL: Update local patients state to reflect "Unassigned" status
-          // This keeps the UI in sync without a hard reload
           setPatients(prev => prev.map(p => ({
             ...p,
             assignedTo: p.assignedTo === staff.name ? 'Unassigned' : p.assignedTo,
@@ -752,7 +765,7 @@ export const AppProvider = ({ children }) => {
 
 
   const contextValue = useMemo(() => ({
-    isLoading, handleModifyList, handleUpdateSettings,
+    isLoading, isSuperAdmin, handleModifyList, handleUpdateSettings,
     activeTab,
     setActiveTab,
     patients,
@@ -865,7 +878,7 @@ export const AppProvider = ({ children }) => {
     handleDeletePatient,
     batchProgress
   }), [
-    isLoading, activeTab, patients, selectedPatient, editingInteractionId, 
+    isLoading, isSuperAdmin, activeTab, patients, selectedPatient, editingInteractionId, 
     isEditingDetails, isClosingCase, showAddModal, addError, importStatus,
     showNotifications, showFilters, isSidebarOpen, toastMessage, confirmDialog,
     calendarDate, areas, castes, references, staffMembers, alertConfig, currentUser,

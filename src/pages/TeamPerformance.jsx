@@ -252,8 +252,8 @@ export default function TeamPerformance() {
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[600px]">
+            <div className="overflow-x-auto overflow-y-hidden">
+              <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-100">
                     <th className="p-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Staff Member</th>

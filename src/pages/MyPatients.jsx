@@ -8,6 +8,7 @@ import {
   UserCircle, ChevronDown, ChevronUp, ClipboardList, Copy, Calendar, ChevronLeft
 } from 'lucide-react';
 import { Badge } from '../components/Badge';
+import { PatientCard } from '../components/PatientCard';
 import { ManageListCard } from '../components/ManageListCard';
 import { OUTCOMES } from '../lib/constants';
 import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone } from '../utils/helpers';
@@ -183,8 +184,27 @@ export default function MyPatients() {
               </button>
             </div>
           </div>
-          <div className="overflow-x-auto flex-1">
-            <table className="w-full text-left border-collapse min-w-[750px]">
+          <div className="overflow-auto flex-1">
+            {/* MOBILE CARD VIEW */}
+            <div className="md:hidden p-4 space-y-4">
+              {filteredMyPatientsList.length === 0 ? (
+                <div className="p-8 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                  No patients found in your personal workload.
+                </div>
+              ) : (
+                filteredMyPatientsList.map(patient => (
+                  <PatientCard 
+                    key={patient.id} 
+                    patient={patient} 
+                    onClick={setSelectedPatient}
+                    isAdmin={false} // Already in My Workspace
+                  />
+                ))
+              )}
+            </div>
+
+            {/* DESKTOP TABLE VIEW */}
+            <table className="hidden md:table w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
                   <th className="p-4 font-medium whitespace-nowrap">Patient</th>

@@ -67,6 +67,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdmin = userRole === 'Admin';
+  const isSuperAdmin = user?.email === 'usama786@gmail.com';
 
   const value = React.useMemo(() => ({
     user,
@@ -76,8 +77,9 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isAdmin,
+    isSuperAdmin,
     fetchUserProfile
-  }), [user, userRole, userFullName, authLoading]);
+  }), [user, userRole, userFullName, authLoading, isSuperAdmin]);
 
   return (
     <AuthContext.Provider value={value}>

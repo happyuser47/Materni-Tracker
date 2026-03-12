@@ -6,6 +6,7 @@ import {
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Badge } from '../components/Badge';
+import { PatientCard } from '../components/PatientCard';
 import { calculateDaysUntil, formatDate } from '../utils/helpers';
 
 const PAGE_SIZE = 25;
@@ -164,10 +165,29 @@ export default function PatientDirectory() {
                 )}
               </div>
 
-              {/* TABLE */}
+              {/* DATA VIEW */}
               <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex-1 overflow-hidden flex flex-col min-h-0">
                 <div className="overflow-auto flex-1">
-                  <table className="w-full text-left border-collapse min-w-[850px]">
+                  {/* MOBILE CARD VIEW */}
+                  <div className="md:hidden p-4 space-y-4">
+                    {visiblePatients.length === 0 ? (
+                      <div className="p-8 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        No patients found matching the criteria.
+                      </div>
+                    ) : (
+                      visiblePatients.map(patient => (
+                        <PatientCard 
+                          key={patient.id} 
+                          patient={patient} 
+                          onClick={setSelectedPatient}
+                          isAdmin={currentUser?.role === 'Admin'}
+                        />
+                      ))
+                    )}
+                  </div>
+
+                  {/* DESKTOP TABLE VIEW */}
+                  <table className="hidden md:table w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
                         <th className="p-4 font-medium whitespace-nowrap">Patient</th>
@@ -263,16 +283,16 @@ export default function PatientDirectory() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="border-t border-slate-200 bg-slate-50/50 px-4 py-3 flex items-center justify-between shrink-0">
-                    <p className="text-xs text-slate-500 font-medium">
+                  <div className="border-t border-slate-200 bg-slate-50/50 px-3 py-2.5 sm:px-4 sm:py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                    <p className="text-xs text-slate-500 font-medium order-2 sm:order-1">
                       Showing <span className="font-bold text-slate-700">{safePage * PAGE_SIZE + 1}–{Math.min((safePage + 1) * PAGE_SIZE, filteredPatients.length)}</span> of <span className="font-bold text-slate-700">{filteredPatients.length}</span>
                     </p>
-                    <div className="flex items-center gap-1.5">
-                      <button onClick={() => setPage(0)} disabled={safePage === 0} className="px-2 py-1 text-xs font-medium rounded-md border border-slate-200 text-slate-500 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">First</button>
+                    <div className="flex items-center gap-1 sm:gap-1.5 order-1 sm:order-2">
+                      <button onClick={() => setPage(0)} disabled={safePage === 0} className="hidden sm:block px-2 py-1 text-xs font-medium rounded-md border border-slate-200 text-slate-500 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">First</button>
                       <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={safePage === 0} className="p-1.5 rounded-md border border-slate-200 text-slate-500 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><ChevronLeft className="h-3.5 w-3.5" /></button>
-                      <span className="px-3 py-1 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 rounded-md">{safePage + 1} / {totalPages}</span>
+                      <span className="px-2.5 py-1 text-[11px] sm:text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 rounded-md whitespace-nowrap">{safePage + 1} / {totalPages}</span>
                       <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1} className="p-1.5 rounded-md border border-slate-200 text-slate-500 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><ChevronRight className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => setPage(totalPages - 1)} disabled={safePage >= totalPages - 1} className="px-2 py-1 text-xs font-medium rounded-md border border-slate-200 text-slate-500 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Last</button>
+                      <button onClick={() => setPage(totalPages - 1)} disabled={safePage >= totalPages - 1} className="hidden sm:block px-2 py-1 text-xs font-medium rounded-md border border-slate-200 text-slate-500 hover:bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors">Last</button>
                     </div>
                   </div>
                 )}

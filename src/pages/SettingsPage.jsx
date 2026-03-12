@@ -19,7 +19,7 @@ export default function SettingsPage() {
   const {
     patients, importStatus, setImportStatus, fileInputRef,
     requestConfirm, areas, castes, references, staffMembers,
-    alertConfig, currentUser, handleAddStaff,
+    alertConfig, currentUser, isSuperAdmin, handleAddStaff,
     handleDeleteStaff, handleFileUpload, handleModifyList, handleUpdateSettings,
     batchProgress
   } = useApp();
@@ -166,6 +166,7 @@ export default function SettingsPage() {
                       </div>
                       <input
                         type="email" value={staffEmail} onChange={e => setStaffEmail(e.target.value)} required placeholder="staff@example.com"
+                        autoComplete="off"
                         className="w-full text-sm border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-400 bg-slate-50/50 transition-all"
                       />
                     </div>
@@ -178,6 +179,7 @@ export default function SettingsPage() {
                       </div>
                       <input
                         type={showStaffPassword ? 'text' : 'password'} value={staffPassword} onChange={e => setStaffPassword(e.target.value)} required placeholder="Min 6 characters" minLength={6}
+                        autoComplete="new-password"
                         className="w-full text-sm border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-400 bg-slate-50/50 transition-all"
                       />
                       <button type="button" onClick={() => setShowStaffPassword(!showStaffPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
@@ -227,13 +229,22 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleDeleteStaff(staff.id)}
-                      className="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all shrink-0 opacity-0 group-hover:opacity-100"
-                      title="Remove staff"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {/* Delete button logic based on Super Admin rules */}
+                    {(staff.email !== 'usama786@gmail.com' && (staff.role !== 'Admin' || isSuperAdmin)) ? (
+                      <button
+                        onClick={() => handleDeleteStaff(staff.id)}
+                        className="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all shrink-0 opacity-0 group-hover:opacity-100"
+                        title="Remove staff"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    ) : (
+                      <div className="p-2 shrink-0">
+                        {staff.email === 'usama786@gmail.com' && (
+                          <div className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded uppercase">System</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
