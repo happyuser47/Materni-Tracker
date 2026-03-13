@@ -85,12 +85,12 @@ const AppContent = () => {
       <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden relative">
         <Header />
         <div className="flex-1 overflow-auto p-4 md:p-8">
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'my-patients' && <MyPatients />}
-          {activeTab === 'calendar' && <CalendarPage />}
-          {activeTab === 'team' && <TeamPerformance />}
-          {activeTab === 'patients' && <PatientDirectory />}
-          {activeTab === 'settings' && <SettingsPage />}
+          <div className={activeTab === 'dashboard' ? 'block' : 'hidden'}><Dashboard /></div>
+          <div className={activeTab === 'my-patients' ? 'block' : 'hidden'}><MyPatients /></div>
+          <div className={activeTab === 'calendar' ? 'block' : 'hidden'}><CalendarPage /></div>
+          <div className={activeTab === 'team' ? 'block' : 'hidden'}><TeamPerformance /></div>
+          <div className={activeTab === 'patients' ? 'block' : 'hidden'}><PatientDirectory /></div>
+          <div className={activeTab === 'settings' ? 'block' : 'hidden'}><SettingsPage /></div>
         </div>
       </main>
       <PatientDetailModal />

@@ -9,15 +9,20 @@ import {
 
 
 export default function Sidebar() {
-  const { activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, currentUser, setFilterAssignedTo } = useApp();
+  const { activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, currentUser, setFilterAssignedTo, requestConfirm } = useApp();
   const { logout, userFullName, userRole } = useAuth();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (err) {
-      console.error('Logout failed:', err);
-    }
+  const handleLogout = () => {
+    requestConfirm(
+      'Are you sure you want to sign out of MaterniTrack?',
+      async () => {
+        try {
+          await logout();
+        } catch (err) {
+          console.error('Logout failed:', err);
+        }
+      }
+    );
   };
 
   if (!currentUser) return null;

@@ -347,22 +347,20 @@ export default function TeamPerformance() {
       {activeTeamTab === 'logs' && (
         <div className="animate-in fade-in duration-300">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 md:px-8 md:py-6 border-b border-slate-100 bg-gradient-to-r from-teal-50/60 to-white">
-              <div className="flex items-center justify-between">
+            <div className="px-4 py-4 md:px-8 md:py-6 border-b border-slate-100 bg-gradient-to-r from-teal-50/60 to-white">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-teal-100 text-teal-700 rounded-xl">
+                  <div className="p-2.5 bg-teal-100 text-teal-700 rounded-xl shrink-0">
                     <ClipboardList className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-800 text-lg">
-                      Clinic Activity Log
-                    </h3>
+                    <h3 className="font-bold text-slate-800 text-base md:text-lg">Clinic Activity Log</h3>
                     <p className="text-xs text-slate-500">
-                      {activityDateFilter ? `Showing logs for ${formatDate(activityDateFilter)}` : 'Showing most recent 50 entries'}
+                      {activityDateFilter ? `Logs for ${formatDate(activityDateFilter)}` : 'Most recent 50 entries'}
                     </p>
                   </div>
                 </div>
-                <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-lg">
+                <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-lg self-start sm:self-auto">
                   {filteredActivities.length} {filteredActivities.length === 1 ? 'entry' : 'entries'}
                 </span>
               </div>
@@ -370,7 +368,7 @@ export default function TeamPerformance() {
 
             <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
               {filteredActivities.length === 0 ? (
-                <div className="p-16 flex flex-col items-center justify-center text-slate-400">
+                <div className="p-10 sm:p-16 flex flex-col items-center justify-center text-slate-400">
                   <div className="p-4 bg-slate-100 rounded-full mb-4">
                     <History className="h-8 w-8 text-slate-300" />
                   </div>
@@ -381,14 +379,14 @@ export default function TeamPerformance() {
                 filteredActivities.map((activity, index) => (
                   <div
                     key={`${activity.id}-${index}`}
-                    className="p-5 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer flex gap-4 group"
+                    className="p-3 sm:p-5 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer flex gap-3 sm:gap-4 group"
                     onClick={() => {
                       setSelectedPatient(patients.find(p => p.id === activity.patientId));
                     }}
                   >
                     {/* Timeline Avatar */}
                     <div className="flex flex-col items-center shrink-0">
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm ${
+                      <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm ${
                         activity.type === 'Outcome Logged' ? 'bg-gradient-to-br from-slate-700 to-slate-900' :
                         activity.type === 'Call' ? 'bg-gradient-to-br from-teal-400 to-teal-600' :
                         activity.type === 'Visit' ? 'bg-gradient-to-br from-teal-500 to-teal-700' :
@@ -425,7 +423,7 @@ export default function TeamPerformance() {
                       <p className="text-sm text-slate-600 mb-2">
                         Patient: <span className="font-semibold text-slate-800">{activity.patientName}</span>
                       </p>
-                      <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-sm text-slate-600 leading-relaxed">
+                      <div className="bg-slate-50 border border-slate-100 rounded-xl p-2.5 sm:p-3 text-xs sm:text-sm text-slate-600 leading-relaxed break-words">
                         {activity.notes}
                       </div>
                     </div>

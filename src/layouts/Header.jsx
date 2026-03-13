@@ -8,15 +8,20 @@ import { calculateDaysUntil, formatDate } from '../utils/helpers';
 
 
 export default function Header() {
-  const { activeTab, setActiveTab, setSelectedPatient, showNotifications, setShowNotifications, isSidebarOpen, setIsSidebarOpen, currentUser, bellAlerts, alertConfig } = useApp();
+  const { activeTab, setActiveTab, setSelectedPatient, showNotifications, setShowNotifications, isSidebarOpen, setIsSidebarOpen, currentUser, bellAlerts, alertConfig, requestConfirm } = useApp();
   const { logout, userFullName } = useAuth();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (err) {
-      console.error('Logout failed:', err);
-    }
+  const handleLogout = () => {
+    requestConfirm(
+      'Are you sure you want to sign out of MaterniTrack?',
+      async () => {
+        try {
+          await logout();
+        } catch (err) {
+          console.error('Logout failed:', err);
+        }
+      }
+    );
   };
 
   if (!currentUser) return null;

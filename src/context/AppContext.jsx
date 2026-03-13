@@ -36,6 +36,7 @@ export const AppProvider = ({ children }) => {
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'my-patients', 'patients', 'calendar', 'team', 'settings'
   const [patients, setPatients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const hasLoadedOnce = useRef(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [editingInteractionId, setEditingInteractionId] = useState(null);
   const [isEditingDetails, setIsEditingDetails] = useState(false);
@@ -275,8 +276,8 @@ export const AppProvider = ({ children }) => {
   }, [authUser]);
 
   const fetchInitialData = async () => {
-    // Only show full-screen loader if we don't have basic data yet
-    if (patients.length === 0) {
+    // Only show full-screen loader on very first load ever
+    if (!hasLoadedOnce.current) {
       setIsLoading(true);
     }
     // Fetch Settings
@@ -345,6 +346,7 @@ export const AppProvider = ({ children }) => {
     }
 
     setIsLoading(false);
+    hasLoadedOnce.current = true;
   };
 
   // Keep selected patient in sync with updates

@@ -549,38 +549,38 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="px-6 py-8 md:px-10 md:py-10">
+            <div className="p-5 md:px-10 md:py-10">
               <div className="max-w-2xl">
-                <div className="flex items-start gap-4 p-5 bg-red-50 rounded-2xl border border-red-100 mb-8">
-                  <AlertTriangle className="h-6 w-6 text-red-500 shrink-0" />
+                <div className="flex items-start gap-3 p-4 bg-red-50 rounded-2xl border border-red-100 mb-6">
+                  <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-bold text-red-900 mb-1">System Factory Reset</h4>
-                    <p className="text-sm text-red-700 leading-relaxed">
-                      This action will <strong>permanently delete all patient records</strong>, including all follow-up histories, interactions, and case logs. 
+                    <h4 className="font-bold text-red-900 mb-1 text-sm">System Factory Reset</h4>
+                    <p className="text-xs text-red-700 leading-relaxed">
+                      This action will <strong>permanently delete all patient records</strong>, including all follow-up histories, interactions, and case logs.
                       This cannot be undone. System staff and settings will remain intact.
                     </p>
                   </div>
                 </div>
 
                 {wipeError && (
-                  <div className="mb-6 p-4 bg-red-100/50 border border-red-200 rounded-xl text-sm text-red-700 font-medium flex items-center gap-3 animate-in shake-in">
-                    <AlertCircle className="h-5 w-5 shrink-0" />
+                  <div className="mb-5 p-3.5 bg-red-100/50 border border-red-200 rounded-xl text-sm text-red-700 font-medium flex items-center gap-3 animate-in shake-in">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                     {wipeError}
                   </div>
                 )}
 
                 {wipeSuccess && (
-                  <div className="mb-6 p-4 bg-emerald-100/50 border border-emerald-200 rounded-xl text-sm text-emerald-700 font-medium flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 shrink-0" />
+                  <div className="mb-5 p-3.5 bg-emerald-100/50 border border-emerald-200 rounded-xl text-sm text-emerald-700 font-medium flex items-center gap-3">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
                     {wipeSuccess}
                   </div>
                 )}
 
-                <form onSubmit={handleWipeData} className="space-y-6">
+                <form onSubmit={handleWipeData} className="space-y-5">
                   <div className="space-y-2">
                     <label className="block text-sm font-bold text-slate-700">Enter Admin Password to Confirm</label>
-                    <p className="text-xs text-slate-500 mb-3">Verification required for Dr. Usama Akram's account.</p>
-                    <div className="relative max-w-sm">
+                    <p className="text-xs text-slate-500">Verification required for Dr. Usama Akram's account.</p>
+                    <div className="relative w-full sm:max-w-sm">
                       <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
                         <Lock className="h-4 w-4" />
                       </div>
@@ -605,7 +605,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={isWiping || !wipePassword}
-                    className="w-full max-w-sm bg-red-600 hover:bg-red-700 disabled:bg-red-300 active:scale-[0.98] text-white py-4 rounded-xl text-sm font-bold transition-all shadow-lg shadow-red-200 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                    className="w-full sm:max-w-sm bg-red-600 hover:bg-red-700 disabled:bg-red-300 active:scale-[0.98] text-white py-3.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-red-200 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
                   >
                     {isWiping ? (
                       <>
