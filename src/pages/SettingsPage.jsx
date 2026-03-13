@@ -233,7 +233,7 @@ export default function SettingsPage() {
                     {(staff.email !== 'usama786@gmail.com' && (staff.role !== 'Admin' || isSuperAdmin)) ? (
                       <button
                         onClick={() => handleDeleteStaff(staff.id)}
-                        className="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all shrink-0 opacity-0 group-hover:opacity-100"
+                        className="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all shrink-0 md:opacity-0 md:group-hover:opacity-100"
                         title="Remove staff"
                       >
                         <Trash2 className="h-4 w-4" />

@@ -237,7 +237,7 @@ export default function TeamPerformance() {
       {activeTeamTab === 'breakdown' && (
         <div className="animate-in fade-in duration-300">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 md:px-8 md:py-6 border-b border-slate-100 bg-gradient-to-r from-teal-50/60 to-white">
+            <div className="px-5 py-4 md:px-8 md:py-6 border-b border-slate-100 bg-gradient-to-r from-teal-50/60 to-white">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-teal-100 text-teal-700 rounded-xl">
                   <Activity className="h-5 w-5" />
@@ -252,7 +252,48 @@ export default function TeamPerformance() {
                 </div>
               </div>
             </div>
-            <div className="overflow-x-auto overflow-y-hidden">
+
+            {/* ── Mobile Card Layout ── */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {activitySummary.map((stat, idx) => (
+                <div key={stat.name} className={`p-4 ${idx === 0 && stat.total > 0 ? 'bg-emerald-50/30' : ''}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 ${stat.role === 'Admin' ? 'bg-gradient-to-br from-teal-600 to-teal-800' : 'bg-gradient-to-br from-teal-500 to-teal-700'}`}>
+                        {stat.name.charAt(0)}
+                      </div>
+                      <div>
+                        <span className="font-semibold text-slate-900 text-sm">{stat.name}</span>
+                        {idx === 0 && stat.total > 0 && (
+                          <span className="ml-1.5 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md font-bold">TOP</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center justify-center min-w-[36px] px-2.5 py-1 rounded-full text-sm font-bold ${stat.total > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                      {stat.total}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { label: 'Calls', value: stat.calls, icon: Phone },
+                      { label: 'Visits', value: stat.visits, icon: Eye },
+                      { label: 'Referrals', value: stat.referrals },
+                      { label: 'Outcomes', value: stat.outcomes },
+                    ].map(item => (
+                      <div key={item.label} className="bg-slate-50 rounded-lg p-2 text-center">
+                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-0.5">{item.label}</p>
+                        <p className={`text-sm font-bold ${item.value > 0 ? 'text-slate-700' : 'text-slate-300'}`}>
+                          {item.value > 0 ? item.value : '—'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Desktop Table Layout ── */}
+            <div className="hidden md:block">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-100">

@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import {
-  BellRing, ChevronRight, Activity, Settings, BarChart2, LogOut
+  BellRing, ChevronRight, Activity, Settings, BarChart2, LogOut, Menu
 } from 'lucide-react';
 import { calculateDaysUntil, formatDate } from '../utils/helpers';
 
@@ -27,9 +27,9 @@ export default function Header() {
         <div className="flex items-center">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="md:hidden p-2 -ml-2 mr-2 flex items-center justify-center transition-opacity hover:opacity-80"
+            className="md:hidden p-2 -ml-2 mr-1 flex items-center justify-center text-slate-500 hover:text-teal-600 transition-colors rounded-lg hover:bg-slate-100"
           >
-            <img src="/logo.png" alt="Logo" className="h-7 w-7 object-contain" />
+            <Menu className="h-5 w-5" />
           </button>
           <div className="md:hidden flex items-center overflow-hidden">
             <span className="text-lg font-bold text-slate-800 truncate">MaterniTrack</span>
