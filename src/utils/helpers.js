@@ -48,14 +48,14 @@ export const isPatientOverdue = (patient, alertConfig) => {
   const daysSinceContact = calculateDaysUntil(patient.lastContact) * -1;
   
   // Broaden criteria:
-  // 1. Critical proximity to EDD (7 days) regardless of contact
-  const isNearDelivery = daysToEdd >= 0 && daysToEdd <= 7;
+  // 1. Critical proximity to EDD regardless of contact (Uses dynamic config)
+  const isNearDelivery = daysToEdd >= 0 && daysToEdd <= (alertConfig?.eddProximity || 30);
   
-  // 2. Proximity to EDD (alertConfig.eddProximity) AND overdue for contact
-  const isOverdueContact = daysSinceContact > alertConfig.contactGap;
+  // 2. Overdue for contact based on dynamic config
+  const isOverdueContact = daysSinceContact > (alertConfig?.contactGap || 14);
   
   // 3. Or just generally nearing EDD while overdue
-  const isNearingDeliveryAndOverdue = daysToEdd <= alertConfig.eddProximity && isOverdueContact;
+  const isNearingDeliveryAndOverdue = daysToEdd <= (alertConfig?.eddProximity || 30) && isOverdueContact;
 
   return isNearDelivery || isNearingDeliveryAndOverdue;
 };

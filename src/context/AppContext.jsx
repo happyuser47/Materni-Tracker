@@ -762,6 +762,24 @@ export const AppProvider = ({ children }) => {
       }
     );
   };
+  const handleWipeAllPatients = async () => {
+    try {
+      // First, we need to delete interactions because of foreign key constraints if not set to cascade
+      // But typically patients table delete with cascade is better. 
+      // To bypass the "where" requirement, we use a filter that matches everything.
+      const { error } = await supabase.from('patients').delete().neq('name', '___NON_EXISTENT_PATIENT___');
+      
+      if (error) throw error;
+      
+      setPatients([]);
+      setSelectedPatient(null);
+      return { success: true };
+    } catch (err) {
+      console.error('Wipe failed:', err);
+      return { error: err.message };
+    }
+  };
+
 
 
   const contextValue = useMemo(() => ({
@@ -876,6 +894,7 @@ export const AppProvider = ({ children }) => {
     handleDeleteStaff,
     handleCopyPhone,
     handleDeletePatient,
+    handleWipeAllPatients,
     batchProgress
   }), [
     isLoading, isSuperAdmin, activeTab, patients, selectedPatient, editingInteractionId, 

@@ -3,8 +3,9 @@ import { useApp } from '../context/AppContext';
 import {
   BellRing, AlertCircle, Upload, Download, FileSpreadsheet,
   Briefcase, Trash2, CheckCircle2, UserCircle, Database, Settings,
-  Users, ListChecks, ShieldAlert, Mail, Lock, Loader2, Eye, EyeOff
+  Users, ListChecks, ShieldAlert, Mail, Lock, Loader2, Eye, EyeOff, Skull, AlertTriangle
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { ManageListCard } from '../components/ManageListCard';
 import { generateCSVTemplate, exportDataToCSV } from '../utils/helpers';
 
@@ -13,6 +14,7 @@ const SETTINGS_TABS = [
   { id: 'alerts', label: 'Alerts', icon: ShieldAlert, adminOnly: false },
   { id: 'data', label: 'Data', icon: Database, adminOnly: false },
   { id: 'fields', label: 'Custom Fields', icon: ListChecks, adminOnly: false },
+  { id: 'danger', label: 'Danger Zone', icon: Skull, superAdminOnly: true },
 ];
 
 export default function SettingsPage() {
@@ -21,10 +23,15 @@ export default function SettingsPage() {
     requestConfirm, areas, castes, references, staffMembers,
     alertConfig, currentUser, isSuperAdmin, handleAddStaff,
     handleDeleteStaff, handleFileUpload, handleModifyList, handleUpdateSettings,
-    batchProgress
+    handleWipeAllPatients, batchProgress
   } = useApp();
+  const { login, user } = useAuth();
 
-  const visibleTabs = SETTINGS_TABS.filter(t => !t.adminOnly || currentUser?.role === 'Admin');
+  const visibleTabs = SETTINGS_TABS.filter(t => {
+    if (t.superAdminOnly) return isSuperAdmin;
+    if (t.adminOnly) return currentUser?.role === 'Admin';
+    return true;
+  });
   const [activeSettingsTab, setActiveSettingsTab] = useState(visibleTabs[0]?.id || 'alerts');
 
   // Add Staff form state
@@ -36,6 +43,39 @@ export default function SettingsPage() {
   const [addStaffLoading, setAddStaffLoading] = useState(false);
   const [addStaffError, setAddStaffError] = useState('');
   const [addStaffSuccess, setAddStaffSuccess] = useState('');
+
+  // Danger Zone state
+  const [wipePassword, setWipePassword] = useState('');
+  const [showWipePassword, setShowWipePassword] = useState(false);
+  const [isWiping, setIsWiping] = useState(false);
+  const [wipeError, setWipeError] = useState('');
+  const [wipeSuccess, setWipeSuccess] = useState('');
+
+  const handleWipeData = async (e) => {
+    e.preventDefault();
+    setWipeError('');
+    setIsWiping(true);
+
+    try {
+      // 1. Verify password using Supabase login (doesn't change session if successful)
+      await login(user.email, wipePassword);
+
+      // 2. Perform wipe
+      const result = await handleWipeAllPatients();
+      
+      if (result.error) {
+        setWipeError(result.error);
+      } else {
+        setWipeSuccess('System reset successful. All patient data has been cleared.');
+        setWipePassword('');
+        setTimeout(() => setWipeSuccess(''), 5000);
+      }
+    } catch (err) {
+      setWipeError('Authentication failed. Please check Dr. Usama\'s password.');
+    } finally {
+      setIsWiping(false);
+    }
+  };
 
   const handleAddStaffSubmit = async (e) => {
     e.preventDefault();
@@ -488,6 +528,98 @@ export default function SettingsPage() {
                   placeholder="Add new reference..."
                   requestConfirm={requestConfirm}
                 />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* DANGER ZONE TAB */}
+      {activeSettingsTab === 'danger' && isSuperAdmin && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl border border-red-200 shadow-sm overflow-hidden">
+            <div className="px-6 py-5 md:px-8 md:py-6 border-b border-red-100 bg-gradient-to-r from-red-50 to-white">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-red-100 text-red-600 rounded-xl">
+                  <Skull className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-red-800 text-lg">Danger Zone</h3>
+                  <p className="text-sm text-red-600/70 font-medium">Destructive system-wide operations.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-8 md:px-10 md:py-10">
+              <div className="max-w-2xl">
+                <div className="flex items-start gap-4 p-5 bg-red-50 rounded-2xl border border-red-100 mb-8">
+                  <AlertTriangle className="h-6 w-6 text-red-500 shrink-0" />
+                  <div>
+                    <h4 className="font-bold text-red-900 mb-1">System Factory Reset</h4>
+                    <p className="text-sm text-red-700 leading-relaxed">
+                      This action will <strong>permanently delete all patient records</strong>, including all follow-up histories, interactions, and case logs. 
+                      This cannot be undone. System staff and settings will remain intact.
+                    </p>
+                  </div>
+                </div>
+
+                {wipeError && (
+                  <div className="mb-6 p-4 bg-red-100/50 border border-red-200 rounded-xl text-sm text-red-700 font-medium flex items-center gap-3 animate-in shake-in">
+                    <AlertCircle className="h-5 w-5 shrink-0" />
+                    {wipeError}
+                  </div>
+                )}
+
+                {wipeSuccess && (
+                  <div className="mb-6 p-4 bg-emerald-100/50 border border-emerald-200 rounded-xl text-sm text-emerald-700 font-medium flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 shrink-0" />
+                    {wipeSuccess}
+                  </div>
+                )}
+
+                <form onSubmit={handleWipeData} className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-700">Enter Admin Password to Confirm</label>
+                    <p className="text-xs text-slate-500 mb-3">Verification required for Dr. Usama Akram's account.</p>
+                    <div className="relative max-w-sm">
+                      <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                        <Lock className="h-4 w-4" />
+                      </div>
+                      <input
+                        type={showWipePassword ? 'text' : 'password'}
+                        value={wipePassword}
+                        onChange={(e) => setWipePassword(e.target.value)}
+                        required
+                        placeholder="••••••••"
+                        className="w-full text-sm border border-slate-200 rounded-xl pl-10 pr-10 py-3.5 outline-none focus:ring-4 focus:ring-red-500/10 focus:border-red-400 bg-slate-50/50 transition-all font-mono"
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => setShowWipePassword(!showWipePassword)} 
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        {showWipePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isWiping || !wipePassword}
+                    className="w-full max-w-sm bg-red-600 hover:bg-red-700 disabled:bg-red-300 active:scale-[0.98] text-white py-4 rounded-xl text-sm font-bold transition-all shadow-lg shadow-red-200 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+                  >
+                    {isWiping ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Deleting Records...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-5 w-5 group-hover:animate-bounce" />
+                        Permanently Wipe All Patient Data
+                      </>
+                    )}
+                  </button>
+                </form>
               </div>
             </div>
           </div>

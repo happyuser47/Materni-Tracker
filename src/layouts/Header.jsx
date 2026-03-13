@@ -8,7 +8,7 @@ import { calculateDaysUntil, formatDate } from '../utils/helpers';
 
 
 export default function Header() {
-  const { activeTab, setActiveTab, setSelectedPatient, showNotifications, setShowNotifications, isSidebarOpen, setIsSidebarOpen, currentUser, bellAlerts } = useApp();
+  const { activeTab, setActiveTab, setSelectedPatient, showNotifications, setShowNotifications, isSidebarOpen, setIsSidebarOpen, currentUser, bellAlerts, alertConfig } = useApp();
   const { logout, userFullName } = useAuth();
 
   const handleLogout = async () => {
@@ -105,7 +105,7 @@ export default function Header() {
                                   </span>
                                 )}
                               </div>
-                              {calculateDaysUntil(patient.edd) <= 7 ? (
+                              {calculateDaysUntil(patient.edd) <= (alertConfig?.eddProximity || 30) ? (
                                 <span className="text-[10px] uppercase font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 whitespace-nowrap shrink-0">Delivery Due</span>
                               ) : (
                                 <span className="text-[10px] uppercase font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap shrink-0">Contact Overdue</span>
