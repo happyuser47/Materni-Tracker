@@ -14,7 +14,16 @@ import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone
 
 
 export default function PatientDetailModal() {
-  const { activeTab, setActiveTab, patients, setPatients, selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, showAddModal, setShowAddModal, addError, setAddError, importStatus, setImportStatus, showNotifications, setShowNotifications, showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, toastMessage, setToastMessage, confirmDialog, setConfirmDialog, requestConfirm, closeConfirm, calendarDate, setCalendarDate, areas, setAreas, castes, setCastes, references, setReferences, staffMembers, setStaffMembers, alertConfig, setAlertConfig, currentUser, setCurrentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent, filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference, filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming, myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities, filteredPatients, filteredMyPatientsList, filteredActivities, activitySummary, teamPerformance, calendarYear, calendarMonth, daysInMonth, firstDayIndex, getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, handleAddInteraction, handleCloseCase, handleReopenCase, handleUpdateInteraction, handleFileUpload, handleAddStaff, handleDeleteStaff, handleCopyPhone, handleDeletePatient } = useApp();
+  const { handleModifyList, activeTab, setActiveTab, patients, setPatients, selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, showAddModal, setShowAddModal, addError, setAddError, importStatus, setImportStatus, showNotifications, setShowNotifications, showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, toastMessage, setToastMessage, confirmDialog, setConfirmDialog, requestConfirm, closeConfirm, calendarDate, setCalendarDate, areas, setAreas, castes, setCastes, references, setReferences, staffMembers, setStaffMembers, alertConfig, setAlertConfig, currentUser, setCurrentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent, filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference, filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming, myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities, filteredPatients, filteredMyPatientsList, filteredActivities, activitySummary, teamPerformance, calendarYear, calendarMonth, daysInMonth, firstDayIndex, getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, handleAddInteraction, handleCloseCase, handleReopenCase, handleUpdateInteraction, handleFileUpload, handleAddStaff, handleDeleteStaff, handleCopyPhone, handleDeletePatient } = useApp();
+  
+  // Inline Add states
+  const [addingArea, setAddingArea] = useState(false);
+  const [newArea, setNewArea] = useState('');
+  const [addingCaste, setAddingCaste] = useState(false);
+  const [newCaste, setNewCaste] = useState('');
+  const [addingRef, setAddingRef] = useState(false);
+  const [newRef, setNewRef] = useState('');
+
   if (['PatientDetailModal', 'AddPatientModal', 'ConfirmModal', 'Toast'].includes('PatientDetailModal')) {
      let isVisible = false;
      if ('PatientDetailModal' === 'PatientDetailModal') isVisible = !!selectedPatient;
@@ -114,23 +123,190 @@ export default function PatientDetailModal() {
                       <label className="block text-xs font-medium text-slate-600 mb-1">Expected Delivery (EDD)</label>
                       <input type="date" name="edd" defaultValue={selectedPatient.edd} className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white" required />
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">Area / Location</label>
-                      <select name="area" defaultValue={selectedPatient.area} className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white" required>
-                        {areas.map(area => <option key={area.id} value={area.value}>{area.value}</option>)}
-                      </select>
+                    <div className="col-span-1">
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Area / Location</label>
+                        {!addingArea ? (
+                          <button 
+                            type="button" 
+                            onClick={() => setAddingArea(true)}
+                            className="text-[9px] bg-teal-50 text-teal-600 px-1 py-0.5 rounded border border-teal-200"
+                          >
+                            + ADD
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <button 
+                              type="button" 
+                              onClick={() => {
+                                if (newArea.trim()) {
+                                  handleModifyList('area', 'add', newArea.trim());
+                                  setNewArea('');
+                                  setAddingArea(false);
+                                }
+                              }}
+                              className="text-[9px] bg-emerald-500 text-white px-1 py-0.5 rounded"
+                            >
+                              OK
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => { setAddingArea(false); setNewArea(''); }}
+                              className="text-[9px] bg-slate-200 text-slate-600 px-1 py-0.5 rounded"
+                            >
+                              X
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {addingArea ? (
+                        <input 
+                          autoFocus
+                          type="text" 
+                          placeholder="New area..." 
+                          value={newArea}
+                          onChange={(e) => setNewArea(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (newArea.trim()) {
+                                handleModifyList('area', 'add', newArea.trim());
+                                setNewArea('');
+                                setAddingArea(false);
+                              }
+                            }
+                          }}
+                          className="w-full text-sm border border-teal-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-teal-50/30"
+                        />
+                      ) : (
+                        <select name="area" defaultValue={selectedPatient.area} className="w-full text-sm border border-slate-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm" required>
+                          {areas.map(area => <option key={area.id} value={area.value}>{area.value}</option>)}
+                        </select>
+                      )}
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-600 mb-1">Caste</label>
-                      <select name="caste" defaultValue={selectedPatient.caste} className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white" required>
-                        {castes.map(caste => <option key={caste.id} value={caste.value}>{caste.value}</option>)}
-                      </select>
+
+                    <div className="col-span-1">
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Caste</label>
+                        {!addingCaste ? (
+                          <button 
+                            type="button" 
+                            onClick={() => setAddingCaste(true)}
+                            className="text-[9px] bg-teal-50 text-teal-600 px-1 py-0.5 rounded border border-teal-200"
+                          >
+                            + ADD
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <button 
+                              type="button" 
+                              onClick={() => {
+                                if (newCaste.trim()) {
+                                  handleModifyList('caste', 'add', newCaste.trim());
+                                  setNewCaste('');
+                                  setAddingCaste(false);
+                                }
+                              }}
+                              className="text-[9px] bg-emerald-500 text-white px-1 py-0.5 rounded"
+                            >
+                              OK
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => { setAddingCaste(false); setNewCaste(''); }}
+                              className="text-[9px] bg-slate-200 text-slate-600 px-1 py-0.5 rounded"
+                            >
+                              X
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {addingCaste ? (
+                        <input 
+                          autoFocus
+                          type="text" 
+                          placeholder="New caste..." 
+                          value={newCaste}
+                          onChange={(e) => setNewCaste(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (newCaste.trim()) {
+                                handleModifyList('caste', 'add', newCaste.trim());
+                                setNewCaste('');
+                                setAddingCaste(false);
+                              }
+                            }
+                          }}
+                          className="w-full text-sm border border-teal-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-teal-50/30"
+                        />
+                      ) : (
+                        <select name="caste" defaultValue={selectedPatient.caste} className="w-full text-sm border border-slate-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm" required>
+                          {castes.map(caste => <option key={caste.id} value={caste.value}>{caste.value}</option>)}
+                        </select>
+                      )}
                     </div>
-                    <div className="col-span-2 sm:col-span-1">
-                      <label className="block text-xs font-medium text-slate-600 mb-1">Reference</label>
-                      <select name="reference" defaultValue={selectedPatient.reference} className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white" required>
-                        {references.map(ref => <option key={ref.id} value={ref.value}>{ref.value}</option>)}
-                      </select>
+
+                    <div className="col-span-2">
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reference</label>
+                        {!addingRef ? (
+                          <button 
+                            type="button" 
+                            onClick={() => setAddingRef(true)}
+                            className="text-[9px] bg-teal-50 text-teal-600 px-1 py-0.5 rounded border border-teal-200"
+                          >
+                            + ADD
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <button 
+                              type="button" 
+                              onClick={() => {
+                                if (newRef.trim()) {
+                                  handleModifyList('reference', 'add', newRef.trim());
+                                  setNewRef('');
+                                  setAddingRef(false);
+                                }
+                              }}
+                              className="text-[9px] bg-emerald-500 text-white px-1 py-0.5 rounded"
+                            >
+                              OK
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => { setAddingRef(false); setNewRef(''); }}
+                              className="text-[9px] bg-slate-200 text-slate-600 px-1 py-0.5 rounded"
+                            >
+                              X
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {addingRef ? (
+                        <input 
+                          autoFocus
+                          type="text" 
+                          placeholder="New reference..." 
+                          value={newRef}
+                          onChange={(e) => setNewRef(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (newRef.trim()) {
+                                handleModifyList('reference', 'add', newRef.trim());
+                                setNewRef('');
+                                setAddingRef(false);
+                              }
+                            }
+                          }}
+                          className="w-full text-sm border border-teal-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-teal-50/30"
+                        />
+                      ) : (
+                        <select name="reference" defaultValue={selectedPatient.reference} className="w-full text-sm border border-slate-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm" required>
+                          {references.map(ref => <option key={ref.id} value={ref.value}>{ref.value}</option>)}
+                        </select>
+                      )}
                     </div>
                     {currentUser?.role === 'Admin' && (
                       <div className="col-span-2 sm:col-span-1">

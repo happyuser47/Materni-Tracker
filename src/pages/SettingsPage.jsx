@@ -3,7 +3,8 @@ import { useApp } from '../context/AppContext';
 import {
   BellRing, AlertCircle, Upload, Download, FileSpreadsheet,
   Briefcase, Trash2, CheckCircle2, UserCircle, Database, Settings,
-  Users, ListChecks, ShieldAlert, Mail, Lock, Loader2, Eye, EyeOff, Skull, AlertTriangle
+  Users, ListChecks, ShieldAlert, Mail, Lock, Loader2, Eye, EyeOff, Skull, AlertTriangle,
+  X, ArrowUpRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ManageListCard } from '../components/ManageListCard';
@@ -33,6 +34,7 @@ export default function SettingsPage() {
     return true;
   });
   const [activeSettingsTab, setActiveSettingsTab] = useState(visibleTabs[0]?.id || 'alerts');
+  const [viewingCredentials, setViewingCredentials] = useState(null);
 
   // Add Staff form state
   const [staffName, setStaffName] = useState('');
@@ -262,7 +264,18 @@ export default function SettingsPage() {
                         )}
                       </div>
                       <div className="truncate">
-                        <p className="text-sm font-semibold text-slate-800 truncate">{staff.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-slate-800 truncate">{staff.name}</p>
+                          {currentUser?.role === 'Admin' && (
+                            <button 
+                              onClick={() => setViewingCredentials(staff)}
+                              className="p-1 hover:bg-teal-50 text-slate-400 hover:text-teal-600 rounded-lg transition-colors"
+                              title="View Credentials"
+                            >
+                              <Eye className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5">
                           <p className={`text-xs font-medium ${staff.role === 'Admin' ? 'text-teal-500' : 'text-slate-400'}`}>{staff.role}</p>
                           {staff.auth_id && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" title="Has login access" />}
@@ -273,7 +286,7 @@ export default function SettingsPage() {
                     {(staff.email !== 'usama786@gmail.com' && (staff.role !== 'Admin' || isSuperAdmin)) ? (
                       <button
                         onClick={() => handleDeleteStaff(staff.id)}
-                        className="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all shrink-0 md:opacity-0 md:group-hover:opacity-100"
+                        className="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-all shrink-0 md:opacity-0 md:group-hover:opacity-100"
                         title="Remove staff"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -290,6 +303,84 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+
+          {/* Staff Credentials Modal */}
+          {viewingCredentials && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl animate-in zoom-in duration-200 border border-slate-200 overflow-hidden">
+                <div className="bg-gradient-to-br from-teal-600 to-teal-800 p-5 text-white flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/20 rounded-lg">
+                      <UserCircle className="h-5 w-5" />
+                    </div>
+                    <h2 className="font-bold text-lg">Staff Credentials</h2>
+                  </div>
+                  <button onClick={() => setViewingCredentials(null)} className="hover:bg-white/20 p-1.5 rounded-lg transition-colors">
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                <div className="p-6 space-y-5">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">NAME</p>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm">
+                        {viewingCredentials.name.charAt(0)}
+                      </div>
+                      <p className="font-bold text-slate-800">{viewingCredentials.name}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">EMAIL ADDRESS</label>
+                      <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 flex items-center justify-between group">
+                        <span className="text-sm font-medium text-slate-700 select-all">{viewingCredentials.email || 'No email set'}</span>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(viewingCredentials.email);
+                          }}
+                          className="text-teal-600 hover:text-teal-800 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <ArrowUpRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">LOGIN PASSWORD</label>
+                      <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 flex items-center justify-between group">
+                        <span className="text-sm font-bold text-teal-700 font-mono tracking-wider select-all">
+                          {viewingCredentials.password || '••••••••'}
+                        </span>
+                        <button 
+                          onClick={() => {
+                            if (viewingCredentials.password) navigator.clipboard.writeText(viewingCredentials.password);
+                          }}
+                          className="text-teal-600 hover:text-teal-800 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <ArrowUpRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                      {!viewingCredentials.password && (
+                        <p className="text-[10px] text-amber-500 mt-2 flex items-start gap-1.5 bg-amber-50 p-2 rounded-lg border border-amber-100">
+                          <AlertCircle className="h-3 w-3 mt-0.5 shrink-0" /> 
+                          <span>Note: Passwords are encrypted for safety. Only new accounts created from now on will show their visible password here.</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setViewingCredentials(null)}
+                    className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-900 transition-colors shadow-lg shadow-slate-200"
+                  >
+                    Close View
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

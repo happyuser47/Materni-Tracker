@@ -14,7 +14,16 @@ import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone
 
 
 export default function AddPatientModal() {
-  const { activeTab, setActiveTab, patients, setPatients, selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, showAddModal, setShowAddModal, addError, setAddError, importStatus, setImportStatus, showNotifications, setShowNotifications, showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, toastMessage, setToastMessage, confirmDialog, setConfirmDialog, requestConfirm, closeConfirm, calendarDate, setCalendarDate, areas, setAreas, castes, setCastes, references, setReferences, staffMembers, setStaffMembers, alertConfig, setAlertConfig, currentUser, setCurrentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent, filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference, filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming, myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities, filteredPatients, filteredMyPatientsList, filteredActivities, activitySummary, teamPerformance, calendarYear, calendarMonth, daysInMonth, firstDayIndex, getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, handleAddInteraction, handleCloseCase, handleReopenCase, handleUpdateInteraction, handleFileUpload, handleAddStaff, handleDeleteStaff, handleCopyPhone, handleDeletePatient } = useApp();
+  const { handleModifyList, activeTab, setActiveTab, patients, setPatients, selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, showAddModal, setShowAddModal, addError, setAddError, importStatus, setImportStatus, showNotifications, setShowNotifications, showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, toastMessage, setToastMessage, confirmDialog, setConfirmDialog, requestConfirm, closeConfirm, calendarDate, setCalendarDate, areas, setAreas, castes, setCastes, references, setReferences, staffMembers, setStaffMembers, alertConfig, setAlertConfig, currentUser, setCurrentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent, filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference, filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming, myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities, filteredPatients, filteredMyPatientsList, filteredActivities, activitySummary, teamPerformance, calendarYear, calendarMonth, daysInMonth, firstDayIndex, getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, handleAddInteraction, handleCloseCase, handleReopenCase, handleUpdateInteraction, handleFileUpload, handleAddStaff, handleDeleteStaff, handleCopyPhone, handleDeletePatient } = useApp();
+  
+  // Inline Add states
+  const [addingArea, setAddingArea] = useState(false);
+  const [newArea, setNewArea] = useState('');
+  const [addingCaste, setAddingCaste] = useState(false);
+  const [newCaste, setNewCaste] = useState('');
+  const [addingRef, setAddingRef] = useState(false);
+  const [newRef, setNewRef] = useState('');
+
   if (['PatientDetailModal', 'AddPatientModal', 'ConfirmModal', 'Toast'].includes('AddPatientModal')) {
      let isVisible = false;
      if ('AddPatientModal' === 'PatientDetailModal') isVisible = !!selectedPatient;
@@ -82,25 +91,192 @@ export default function AddPatientModal() {
                   />
                 </div>
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Area / Location *</label>
-                  <select name="area" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
-                    <option value="">Select Area...</option>
-                    {areas.map(area => <option key={area.id} value={area.value}>{area.value}</option>)}
-                  </select>
+                  <div className="flex justify-between items-end mb-1">
+                    <label className="block text-sm font-medium text-slate-700">Area / Location *</label>
+                    {!addingArea ? (
+                      <button 
+                        type="button" 
+                        onClick={() => setAddingArea(true)}
+                        className="text-[10px] bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded border border-teal-200 hover:bg-teal-100 transition-colors flex items-center font-bold"
+                      >
+                        <Plus className="h-2.5 w-2.5 mr-1" /> QUICK ADD
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            if (newArea.trim()) {
+                              handleModifyList('area', 'add', newArea.trim());
+                              setNewArea('');
+                              setAddingArea(false);
+                            }
+                          }}
+                          className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded hover:bg-emerald-600 transition-colors font-bold"
+                        >
+                          SAVE
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => { setAddingArea(false); setNewArea(''); }}
+                          className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded hover:bg-slate-300 transition-colors font-bold"
+                        >
+                          X
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {addingArea ? (
+                    <input 
+                      autoFocus
+                      type="text" 
+                      placeholder="Enter new area..." 
+                      value={newArea}
+                      onChange={(e) => setNewArea(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (newArea.trim()) {
+                            handleModifyList('area', 'add', newArea.trim());
+                            setNewArea('');
+                            setAddingArea(false);
+                          }
+                        }
+                      }}
+                      className="w-full border border-teal-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-teal-50/30"
+                    />
+                  ) : (
+                    <select name="area" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
+                      <option value="">Select Area...</option>
+                      {areas.map(area => <option key={area.id} value={area.value}>{area.value}</option>)}
+                    </select>
+                  )}
                 </div>
+
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Caste *</label>
-                  <select name="caste" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
-                    <option value="">Select Caste...</option>
-                    {castes.map(caste => <option key={caste.id} value={caste.value}>{caste.value}</option>)}
-                  </select>
+                  <div className="flex justify-between items-end mb-1">
+                    <label className="block text-sm font-medium text-slate-700">Caste *</label>
+                    {!addingCaste ? (
+                      <button 
+                        type="button" 
+                        onClick={() => setAddingCaste(true)}
+                        className="text-[10px] bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded border border-teal-200 hover:bg-teal-100 transition-colors flex items-center font-bold"
+                      >
+                        <Plus className="h-2.5 w-2.5 mr-1" /> QUICK ADD
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            if (newCaste.trim()) {
+                              handleModifyList('caste', 'add', newCaste.trim());
+                              setNewCaste('');
+                              setAddingCaste(false);
+                            }
+                          }}
+                          className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded hover:bg-emerald-600 transition-colors font-bold"
+                        >
+                          SAVE
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => { setAddingCaste(false); setNewCaste(''); }}
+                          className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded hover:bg-slate-300 transition-colors font-bold"
+                        >
+                          X
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {addingCaste ? (
+                    <input 
+                      autoFocus
+                      type="text" 
+                      placeholder="Enter new caste..." 
+                      value={newCaste}
+                      onChange={(e) => setNewCaste(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (newCaste.trim()) {
+                            handleModifyList('caste', 'add', newCaste.trim());
+                            setNewCaste('');
+                            setAddingCaste(false);
+                          }
+                        }
+                      }}
+                      className="w-full border border-teal-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-teal-50/30"
+                    />
+                  ) : (
+                    <select name="caste" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
+                      <option value="">Select Caste...</option>
+                      {castes.map(caste => <option key={caste.id} value={caste.value}>{caste.value}</option>)}
+                    </select>
+                  )}
                 </div>
+
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Reference *</label>
-                  <select name="reference" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
-                    <option value="">Select Reference...</option>
-                    {references.map(ref => <option key={ref.id} value={ref.value}>{ref.value}</option>)}
-                  </select>
+                  <div className="flex justify-between items-end mb-1">
+                    <label className="block text-sm font-medium text-slate-700">Reference *</label>
+                    {!addingRef ? (
+                      <button 
+                        type="button" 
+                        onClick={() => setAddingRef(true)}
+                        className="text-[10px] bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded border border-teal-200 hover:bg-teal-100 transition-colors flex items-center font-bold"
+                      >
+                        <Plus className="h-2.5 w-2.5 mr-1" /> QUICK ADD
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            if (newRef.trim()) {
+                              handleModifyList('reference', 'add', newRef.trim());
+                              setNewRef('');
+                              setAddingRef(false);
+                            }
+                          }}
+                          className="text-[10px] bg-emerald-500 text-white px-1.5 py-0.5 rounded hover:bg-emerald-600 transition-colors font-bold"
+                        >
+                          SAVE
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => { setAddingRef(false); setNewRef(''); }}
+                          className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded hover:bg-slate-300 transition-colors font-bold"
+                        >
+                          X
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {addingRef ? (
+                    <input 
+                      autoFocus
+                      type="text" 
+                      placeholder="Enter new reference..." 
+                      value={newRef}
+                      onChange={(e) => setNewRef(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (newRef.trim()) {
+                            handleModifyList('reference', 'add', newRef.trim());
+                            setNewRef('');
+                            setAddingRef(false);
+                          }
+                        }
+                      }}
+                      className="w-full border border-teal-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-teal-50/30"
+                    />
+                  ) : (
+                    <select name="reference" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
+                      <option value="">Select Reference...</option>
+                      {references.map(ref => <option key={ref.id} value={ref.value}>{ref.value}</option>)}
+                    </select>
+                  )}
                 </div>
                 <div className="col-span-2 sm:col-span-1">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Expected Delivery (EDD) *</label>
