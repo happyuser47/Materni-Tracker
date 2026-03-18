@@ -172,7 +172,10 @@ export const AppProvider = ({ children }) => {
       const matchesCaste = filterCaste === 'All' || p.caste === filterCaste;
       const matchesReference = filterReference === 'All' || p.reference === filterReference;
       const matchesAssigned = filterAssignedTo === 'All' || p.assignedTo === filterAssignedTo;
-      const matchesStatus = filterStatus === 'All' || (filterStatus === 'Active' ? p.status === 'Active' : p.status !== 'Active');
+      const matchesStatus = filterStatus === 'All' ? true :
+                            filterStatus === 'Active' ? p.status === 'Active' :
+                            filterStatus === 'Resolved' ? p.status !== 'Active' :
+                            p.status === filterStatus;
 
       let matchesRegDate = true;
       if (filterRegStart || filterRegEnd) {
@@ -206,7 +209,10 @@ export const AppProvider = ({ children }) => {
   const filteredMyPatientsList = useMemo(() => {
     return myPatientsList.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(mySearchTerm.toLowerCase()) || p.phone.includes(mySearchTerm) || p.id.includes(mySearchTerm);
-      const matchesStatus = myFilterStatus === 'All' || (myFilterStatus === 'Active' ? p.status === 'Active' : p.status !== 'Active');
+      const matchesStatus = myFilterStatus === 'All' ? true :
+                            myFilterStatus === 'Active' ? p.status === 'Active' :
+                            myFilterStatus === 'Resolved' ? p.status !== 'Active' :
+                            p.status === myFilterStatus;
       return matchesSearch && matchesStatus;
     }).sort((a, b) => new Date(a.edd) - new Date(b.edd));
   }, [myPatientsList, mySearchTerm, myFilterStatus]);
@@ -331,6 +337,7 @@ export const AppProvider = ({ children }) => {
         status: p.status,
         registrationDate: p.registration_date,
         lastContact: p.last_contact,
+        nextInteractionDate: p.next_interaction_date,
         interactions: (p.interactions || []).map(i => ({
           uuid: i.id,
           id: i.id,
@@ -339,7 +346,8 @@ export const AppProvider = ({ children }) => {
           staff: i.interaction_staff ? i.interaction_staff.name : 'Unknown',
           notes: i.notes,
           intent: i.intent,
-          preference: i.preference
+          preference: i.preference,
+          nextInteractionDate: i.next_interaction_date
         })).sort((a, b) => new Date(b.date) - new Date(a.date))
       }));
       setPatients(mapped);
@@ -438,20 +446,21 @@ export const AppProvider = ({ children }) => {
 
     const newInteraction = {
       patient_id: patient.uuid, date: interactionData.date, type: interactionData.type,
-      staff_id: currentUser?.id, notes: interactionData.notes, intent: newIntent, preference: newPreference
+      staff_id: currentUser?.id, notes: interactionData.notes, intent: newIntent, preference: newPreference,
+      next_interaction_date: interactionData.nextInteractionDate || null
     };
 
     const [{ data: iData }, { data: pData }] = await Promise.all([
       supabase.from('interactions').insert(newInteraction).select().single(),
-      supabase.from('patients').update({ intent: newIntent, preference: newPreference, last_contact: interactionData.date }).eq('id', patient.uuid).select().single()
+      supabase.from('patients').update({ intent: newIntent, preference: newPreference, last_contact: interactionData.date, next_interaction_date: interactionData.nextInteractionDate || patient.nextInteractionDate || null }).eq('id', patient.uuid).select().single()
     ]);
 
     setPatients(prev => prev.map(p => {
       if (p.uuid === patient.uuid) {
         return {
-          ...p, intent: newIntent, preference: newPreference, lastContact: interactionData.date,
+          ...p, intent: newIntent, preference: newPreference, lastContact: interactionData.date, nextInteractionDate: interactionData.nextInteractionDate || p.nextInteractionDate,
           interactions: [{
-            uuid: iData?.id, id: iData?.id, date: iData?.date, type: iData?.type, staff: currentUser?.name || 'Unknown', notes: iData?.notes, intent: iData?.intent, preference: iData?.preference
+            uuid: iData?.id, id: iData?.id, date: iData?.date, type: iData?.type, staff: currentUser?.name || 'Unknown', notes: iData?.notes, intent: iData?.intent, preference: iData?.preference, nextInteractionDate: iData?.next_interaction_date
           }, ...p.interactions].sort((a, b) => new Date(b.date) - new Date(a.date))
         };
       }
@@ -523,11 +532,12 @@ export const AppProvider = ({ children }) => {
     await supabase.from('interactions').update(updatedData).eq('id', interaction.uuid);
 
     const isLatest = patient.interactions[0]?.id === interactionId;
-    if (isLatest && (updatedData.intent || updatedData.preference || updatedData.date)) {
+    if (isLatest && (updatedData.intent || updatedData.preference || updatedData.date || updatedData.next_interaction_date !== undefined)) {
       const pUpdates = {};
       if (updatedData.intent) pUpdates.intent = updatedData.intent;
       if (updatedData.preference) pUpdates.preference = updatedData.preference;
       if (updatedData.date) pUpdates.last_contact = updatedData.date;
+      if (updatedData.next_interaction_date !== undefined) pUpdates.next_interaction_date = updatedData.next_interaction_date;
       
       await supabase.from('patients').update(pUpdates).eq('id', patient.uuid);
     }
@@ -539,7 +549,8 @@ export const AppProvider = ({ children }) => {
           intent: isLatest && updatedData.intent ? updatedData.intent : p.intent,
           preference: isLatest && updatedData.preference ? updatedData.preference : p.preference,
           lastContact: isLatest && updatedData.date ? updatedData.date : p.lastContact,
-          interactions: p.interactions.map(i => i.id === interactionId ? { ...i, ...updatedData } : i)
+          nextInteractionDate: isLatest && updatedData.next_interaction_date !== undefined ? updatedData.next_interaction_date : p.nextInteractionDate,
+          interactions: p.interactions.map(i => i.id === interactionId ? { ...i, ...updatedData, nextInteractionDate: updatedData.next_interaction_date !== undefined ? updatedData.next_interaction_date : i.nextInteractionDate } : i)
         };
       }
       return p;

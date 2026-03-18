@@ -8,6 +8,7 @@ import {
 import { Badge } from '../components/Badge';
 import { PatientCard } from '../components/PatientCard';
 import { calculateDaysUntil, formatDate } from '../utils/helpers';
+import { OUTCOMES } from '../lib/constants';
 
 const PAGE_SIZE = 25;
 
@@ -135,11 +136,20 @@ export default function PatientDirectory() {
                       {uniqueReferences.map(ref => <option key={ref} value={ref}>{ref}</option>)}
                     </select>
 
-                    <select className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white" value={filterIntent} onChange={(e) => { setFilterIntent(e.target.value); resetPage(); }} disabled={filterStatus === 'Resolved'}>
+                    <select className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white" value={filterIntent} onChange={(e) => { setFilterIntent(e.target.value); resetPage(); }} disabled={filterStatus === 'Resolved' || filterStatus !== 'All' && filterStatus !== 'Active'}>
                       <option value="All">All Intent Levels</option>
                       <option value="High">High Intent</option>
                       <option value="Medium">Medium Intent</option>
                       <option value="Low">Low Intent</option>
+                    </select>
+
+                    <select className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white" value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); resetPage(); }}>
+                      <option value="All">All Statuses</option>
+                      <option value="Active">Active Cases</option>
+                      <option value="Resolved">All Closed Cases</option>
+                      <optgroup label="Specific Outcomes">
+                        {OUTCOMES.map(o => <option key={o} value={o}>{o}</option>)}
+                      </optgroup>
                     </select>
 
                     <div className="col-span-1 sm:col-span-2 xl:col-span-2 flex items-center bg-white border border-slate-300 rounded-lg px-3 py-1.5 focus-within:ring-2 focus-within:ring-teal-500">
@@ -194,6 +204,7 @@ export default function PatientDirectory() {
                         <th className="p-4 font-medium whitespace-nowrap">Status / Intent</th>
                         {currentUser?.role === 'Admin' && <th className="p-4 font-medium whitespace-nowrap">Assigned To</th>}
                         <th className="p-4 font-medium whitespace-nowrap">EDD</th>
+                        <th className="p-4 font-medium whitespace-nowrap">Interaction Dates</th>
                         <th className="p-4 font-medium whitespace-nowrap">Area & Details</th>
                         <th className="p-4 font-medium text-right whitespace-nowrap">Action</th>
                       </tr>
@@ -201,7 +212,7 @@ export default function PatientDirectory() {
                     <tbody className="divide-y divide-slate-100">
                       {visiblePatients.length === 0 ? (
                         <tr>
-                          <td colSpan={currentUser?.role === 'Admin' ? "6" : "5"} className="p-8 text-center text-slate-500">
+                          <td colSpan={currentUser?.role === 'Admin' ? "7" : "6"} className="p-8 text-center text-slate-500">
                             No patients found matching the criteria.
                           </td>
                         </tr>
@@ -251,6 +262,25 @@ export default function PatientDirectory() {
                               {patient.status === 'Active' && (
                                 <span className="text-xs text-slate-500 mt-0.5 block">{calculateDaysUntil(patient.edd)} days left</span>
                               )}
+                            </td>
+                            <td className="p-4 whitespace-nowrap text-sm">
+                              <div className="flex flex-col gap-1.5">
+                                <span className="text-slate-700 font-medium flex items-center">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 w-10">Last:</span>
+                                  {formatDate(patient.lastContact)}
+                                </span>
+                                {patient.nextInteractionDate ? (
+                                  <span className="text-teal-700 font-bold flex items-center">
+                                    <span className="text-[10px] uppercase tracking-wider text-teal-600/70 w-10">Next:</span>
+                                    {formatDate(patient.nextInteractionDate)}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400 italic text-xs flex items-center">
+                                    <span className="text-[10px] not-italic font-bold uppercase tracking-wider text-slate-300 w-10">Next:</span>
+                                    Not Set
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="p-4 text-slate-600 text-sm">
                               <span className="flex items-center whitespace-nowrap">

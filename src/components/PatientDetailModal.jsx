@@ -498,7 +498,8 @@ export default function PatientDetailModal() {
                         type: formData.get('type'),
                         newIntent: formData.get('intent'),
                         newPreference: formData.get('preference'),
-                        notes: formData.get('notes')
+                        notes: formData.get('notes'),
+                        nextInteractionDate: formData.get('next_interaction_date')
                       });
                       e.target.reset();
                     }}
@@ -529,6 +530,10 @@ export default function PatientDetailModal() {
                           <option value="Other Hospital">Prefers Other Hospital</option>
                           <option value="Undecided">Undecided</option>
                         </select>
+                      </div>
+                      <div className="col-span-2 sm:col-span-1">
+                        <label className="block text-xs font-medium text-slate-600 mb-1">Next Follow-up Date (Optional)</label>
+                        <input type="date" name="next_interaction_date" className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white" />
                       </div>
                     </div>
                     <textarea 
@@ -566,7 +571,8 @@ export default function PatientDetailModal() {
                               type: formData.get('type'),
                               intent: formData.get('intent'),
                               preference: formData.get('preference'),
-                              notes: formData.get('notes')
+                              notes: formData.get('notes'),
+                              next_interaction_date: formData.get('next_interaction_date') || null
                             });
                           }}
                           className="bg-white border border-teal-300 p-4 rounded-xl shadow-md w-full ml-6 space-y-3 relative z-10"
@@ -590,6 +596,13 @@ export default function PatientDetailModal() {
                               <option value="Other Hospital">Prefers Other Hospital</option>
                               <option value="Undecided">Undecided</option>
                             </select>
+                            <input 
+                              type="date" 
+                              name="next_interaction_date" 
+                              defaultValue={interaction.nextInteractionDate || ''}
+                              className="col-span-2 sm:col-span-1 text-sm border border-slate-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-white" 
+                              title="Next Follow-up Date"
+                            />
                           </div>
                           <textarea 
                             name="notes"
@@ -635,9 +648,16 @@ export default function PatientDetailModal() {
                           <p className="text-sm text-slate-700 leading-relaxed mb-2">
                             {interaction.notes}
                           </p>
-                          <p className="text-xs text-slate-400 flex items-center">
-                             <Users className="h-3 w-3 mr-1" /> Logged by {interaction.staff}
-                          </p>
+                          <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                            <p className="text-xs text-slate-400 flex items-center">
+                               <Users className="h-3 w-3 mr-1" /> Logged by {interaction.staff}
+                            </p>
+                            {interaction.nextInteractionDate && (
+                              <p className="text-xs text-teal-600 font-medium flex items-center sm:ml-auto">
+                                <CalendarHeart className="h-3 w-3 mr-1" /> Next Date: {formatDate(interaction.nextInteractionDate)}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>

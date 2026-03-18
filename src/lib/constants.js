@@ -9,9 +9,13 @@ export const DEFAULT_REFERENCES = [
   'Staff', 'LHV', 'Midwife', 'Self', 'Doctor', 'Other'
 ];
 export const OUTCOMES = [
-  'Delivered (Clinic)',
-  'Delivered (Home)',
-  'Delivered (Other Hospital)',
+  'Delivered (Home Dai)',
+  'Delivered (THQ, NVD)',
+  'Delivered (THQ, C/S)',
+  'Delivered (DHQ, NVD)',
+  'Delivered (DHQ, CS)',
+  'Delivered (Private, NVD)',
+  'Delivered (Private, CS)',
   'Referred Out (Medical)',
   'Miscarriage / Loss',
   'Moved Away'
