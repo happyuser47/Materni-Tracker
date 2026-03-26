@@ -16,6 +16,7 @@ export const OUTCOMES = [
   'Delivered (DHQ, CS)',
   'Delivered (Private, NVD)',
   'Delivered (Private, CS)',
+  'Delivered (MNHC)',
   'Referred Out (Medical)',
   'Miscarriage / Loss',
   'Moved Away'
