@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
 import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone, isPatientOverdue, generateCSVTemplate, exportDataToCSV } from '../utils/helpers';
+import { extractTextFromPDF, parseOPDPatients } from '../lib/pdfParser';
 
 const AppContext = createContext();
 
@@ -558,82 +559,45 @@ export const AppProvider = ({ children }) => {
     setEditingInteractionId(null);
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setImportStatus(null);
     setBatchProgress({ current: 0, total: 0 });
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const text = event.target.result;
-      const allLines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+    const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    let dataRows = [];
+    let m = { name: 0, cnic: 1, phone: 2, area: 3, caste: 4, ref: 5, staff: 6, edd: 7 }; // default mapping
 
-      if (allLines.length < 2) {
-        setImportStatus('error: File is empty or invalid format.');
-        setBatchProgress(null);
-        return;
-      }
-
-      // Professional CSV content-aware parser
-      const parseCSV = (l) => {
-        const res = [];
-        let s = '', q = false;
-        for (let i = 0; i < l.length; i++) {
-          const c = l[i];
-          if (c === '"' && l[i + 1] === '"') { s += '"'; i++; } // Escaped quotes
-          else if (c === '"') q = !q;
-          else if (c === ',' && !q) { res.push(s.trim()); s = ''; }
-          else s += c;
-        }
-        res.push(s.trim());
-        return res.map(v => v.replace(/^"|"$/g, '').trim());
-      };
-
-      const rawHeaders = parseCSV(allLines[0]);
-
-      // Intelligent Header Mapping
-      const m = {
-        name: rawHeaders.findIndex(h => /name|full/i.test(h)),
-        cnic: rawHeaders.findIndex(h => /cnic|id|identity/i.test(h)),
-        phone: rawHeaders.findIndex(h => /phone|mobile|contact/i.test(h)),
-        area: rawHeaders.findIndex(h => /area|location/i.test(h)),
-        caste: rawHeaders.findIndex(h => /caste/i.test(h)),
-        ref: rawHeaders.findIndex(h => /ref/i.test(h)),
-        staff: rawHeaders.findIndex(h => /assign/i.test(h)),
-        edd: rawHeaders.findIndex(h => /edd|delivery/i.test(h))
-      };
-
-      const dataRows = allLines.slice(1);
+    const processExtractedRows = async (rows, mapping) => {
       const BATCH_SIZE = 50;
       let successCount = 0;
       let errorCount = 0;
 
-      setBatchProgress({ current: 0, total: dataRows.length });
+      setBatchProgress({ current: 0, total: rows.length });
 
-      for (let i = 0; i < dataRows.length; i += BATCH_SIZE) {
-        const chunk = dataRows.slice(i, i + BATCH_SIZE);
+      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+        const chunk = rows.slice(i, i + BATCH_SIZE);
         const toUpsert = [];
 
-        for (const line of chunk) {
-          const cells = parseCSV(line);
-          const cnicRaw = m.cnic !== -1 ? cells[m.cnic] : '';
+        for (const cells of chunk) {
+          const cnicRaw = mapping.cnic !== -1 && cells[mapping.cnic] ? cells[mapping.cnic] : '';
           const formattedCnic = formatCNIC(cnicRaw);
 
           if (formattedCnic.length !== 15) { errorCount++; continue; }
 
-          const staffObj = staffMembers.find(s => s.name === (m.staff !== -1 ? cells[m.staff] : ''));
+          const staffObj = staffMembers.find(s => s.name === (mapping.staff !== -1 ? cells[mapping.staff] : ''));
 
           toUpsert.push({
             cnic: formattedCnic,
-            name: m.name !== -1 ? cells[m.name] : 'Unknown',
-            phone: m.phone !== -1 ? formatPhone(cells[m.phone]) : '',
-            area: m.area !== -1 ? cells[m.area] : 'Other',
-            caste: m.caste !== -1 ? cells[m.caste] : 'Other',
-            reference: m.ref !== -1 ? cells[m.ref] : 'Other',
+            name: mapping.name !== -1 ? cells[mapping.name] : 'Unknown',
+            phone: mapping.phone !== -1 ? formatPhone(cells[mapping.phone]) : '',
+            area: mapping.area !== -1 ? cells[mapping.area] : 'Other',
+            caste: mapping.caste !== -1 ? cells[mapping.caste] : 'Other',
+            reference: mapping.ref !== -1 ? cells[mapping.ref] : 'Other',
             assigned_to: staffObj ? staffObj.id : null,
-            edd: m.edd !== -1 ? cells[m.edd] : new Date().toISOString().split('T')[0],
+            edd: mapping.edd !== -1 && cells[mapping.edd] ? cells[mapping.edd] : new Date(Date.now() + Math.random() * 200 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             intent: 'Medium', preference: 'Undecided', status: 'Active',
             registration_date: new Date().toISOString(), last_contact: new Date().toISOString()
           });
@@ -645,7 +609,7 @@ export const AppProvider = ({ children }) => {
           else errorCount += toUpsert.length;
         }
 
-        setBatchProgress({ current: Math.min(i + BATCH_SIZE, dataRows.length), total: dataRows.length });
+        setBatchProgress({ current: Math.min(i + BATCH_SIZE, rows.length), total: rows.length });
         await new Promise(r => setTimeout(r, 0));
       }
 
@@ -662,13 +626,83 @@ export const AppProvider = ({ children }) => {
         })));
       }
 
-      setImportStatus(`success: Processed ${dataRows.length} records. Imported/Updated: ${successCount}. Errors: ${errorCount}.`);
+      setImportStatus(`success: Processed ${rows.length} records. Imported/Updated: ${successCount}. Errors: ${errorCount}.`);
       setBatchProgress(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     };
-    reader.readAsText(file);
-  };
 
+    if (isPDF) {
+      setImportStatus('Parsing PDF...');
+      try {
+        const fullText = await extractTextFromPDF(file);
+        console.log('[PDF Import] Extracted text length:', fullText.length);
+
+        const parsedPatients = parseOPDPatients(fullText);
+        console.log('[PDF Import] Parsed patients count:', parsedPatients.length);
+
+        if (parsedPatients.length === 0) {
+          setImportStatus('error: Could not extract patient records from this PDF. Ensure it is an OPD report with CNIC data.');
+          setBatchProgress(null);
+          return;
+        }
+
+        // Convert parsed patients into the dataRows format expected by processExtractedRows
+        // Format: [name, cnic, phone, area, caste, reference, staff, edd]
+        for (const p of parsedPatients) {
+          dataRows.push([p.name, p.cnic, p.phone, p.address, 'Other', 'OPD', '', '']);
+        }
+
+        setImportStatus(`Extracted ${dataRows.length} patient records. Importing...`);
+        await processExtractedRows(dataRows, m);
+      } catch (err) {
+        setImportStatus(`error: Failed to read PDF file. (${err.message})`);
+        console.error('[PDF Import] Error:', err);
+        setBatchProgress(null);
+      }
+    } else {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const text = event.target.result;
+        const allLines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+
+        if (allLines.length < 2) {
+          setImportStatus('error: File is empty or invalid format.');
+          setBatchProgress(null);
+          return;
+        }
+
+        const parseCSV = (l) => {
+          const res = [];
+          let s = '', q = false;
+          for (let i = 0; i < l.length; i++) {
+            const c = l[i];
+            if (c === '"' && l[i + 1] === '"') { s += '"'; i++; }
+            else if (c === '"') q = !q;
+            else if (c === ',' && !q) { res.push(s.trim()); s = ''; }
+            else s += c;
+          }
+          res.push(s.trim());
+          return res.map(v => v.replace(/^"|"$/g, '').trim());
+        };
+
+        const rawHeaders = parseCSV(allLines[0]);
+        m = {
+          name: rawHeaders.findIndex(h => /name|full/i.test(h)),
+          cnic: rawHeaders.findIndex(h => /cnic|id|identity/i.test(h)),
+          phone: rawHeaders.findIndex(h => /phone|mobile|contact/i.test(h)),
+          area: rawHeaders.findIndex(h => /area|location/i.test(h)),
+          caste: rawHeaders.findIndex(h => /caste/i.test(h)),
+          ref: rawHeaders.findIndex(h => /ref/i.test(h)),
+          staff: rawHeaders.findIndex(h => /assign/i.test(h)),
+          edd: rawHeaders.findIndex(h => /edd|delivery/i.test(h))
+        };
+
+        dataRows = allLines.slice(1).map(line => parseCSV(line));
+        await processExtractedRows(dataRows, m);
+      };
+      reader.readAsText(file);
+    }
+  };
   const handleAddStaff = async (staffData) => {
     const { name, role, email, password } = staffData;
 

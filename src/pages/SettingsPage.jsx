@@ -472,13 +472,13 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-800">Import Patients</h3>
-                    <p className="text-xs text-slate-500">Bulk upload from CSV</p>
+                    <p className="text-xs text-slate-500">Bulk upload from CSV or PDF</p>
                   </div>
                 </div>
               </div>
               <div className="px-6 py-5 md:px-8 md:py-6 flex-1 flex flex-col">
                 <p className="text-sm text-slate-500 mb-6 flex-1">
-                  Upload a CSV file to bulk import new patients. Use the template to ensure correct formatting. Duplicates (by CNIC) are automatically skipped.
+                  Upload a CSV or PDF file to bulk import new patients. CSV format is standard; PDFs match the specific OPD generated report format. Duplicates (by CNIC) are automatically skipped.
                 </p>
                 <div className="space-y-3">
                   <button
@@ -490,13 +490,13 @@ export default function SettingsPage() {
                   </button>
                   <div className="relative">
                     <input
-                      type="file" accept=".csv" onChange={handleFileUpload} ref={fileInputRef}
+                      type="file" accept=".csv,.pdf" onChange={handleFileUpload} ref={fileInputRef}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                      title="Click to upload CSV"
+                      title="Click to upload CSV or PDF"
                     />
                     <div className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center shadow-sm shadow-teal-200">
                       <Upload className="h-4 w-4 mr-2" />
-                      Select & Upload CSV
+                      Select & Upload File
                     </div>
                   </div>
 
