@@ -51,15 +51,16 @@ export const extractTextFromPDF = async (file) => {
  *   [MR continued]
  *   [Patient Name] [SrNo]
  *
- * This parser anchors on the (Female|Male)(03xxxxxxxxx) pattern,
+ * This parser anchors on the (Female)(03xxxxxxxxx) pattern,
+ * securely filtering out male records,
  * then looks ahead for the 13-digit CNIC and the patient name.
  */
 export const parseOPDPatients = (fullText) => {
   const patients = [];
   const seen = new Set();
 
-  // Anchor: find every occurrence of Gender+Phone
-  const genderPhoneRegex = /(Female|Male)(03\d{9})/g;
+  // Anchor: find ONLY Female occurrences + Phone
+  const genderPhoneRegex = /(Female)(03\d{9})/g;
 
   let match;
   while ((match = genderPhoneRegex.exec(fullText)) !== null) {
