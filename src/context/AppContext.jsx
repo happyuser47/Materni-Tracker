@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
 import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone, isPatientOverdue, generateCSVTemplate, exportDataToCSV } from '../utils/helpers';
-import { extractTextFromPDF, parseOPDPatients } from '../lib/pdfParser';
+import { extractTextFromPDF, parsePdfPatientsForImport } from '../lib/pdfParser';
 
 const AppContext = createContext();
 
@@ -45,6 +45,7 @@ export const AppProvider = ({ children }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addError, setAddError] = useState('');
   const [importStatus, setImportStatus] = useState(null);
+  const [pdfImportPreview, setPdfImportPreview] = useState(null); // { rows, mapping, formatLabel, fileName }
   const [batchProgress, setBatchProgress] = useState(null); // { current: 0, total: 0 }
   const [showNotifications, setShowNotifications] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -559,105 +560,142 @@ export const AppProvider = ({ children }) => {
     setEditingInteractionId(null);
   };
 
+  const runBulkPatientUpsert = async (rows, mapping) => {
+    const BATCH_SIZE = 50;
+    let successCount = 0;
+    let errorCount = 0;
+
+    setBatchProgress({ current: 0, total: rows.length });
+
+    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+      const chunk = rows.slice(i, i + BATCH_SIZE);
+      const toUpsert = [];
+
+      for (const cells of chunk) {
+        const cnicRaw = mapping.cnic !== -1 && cells[mapping.cnic] ? cells[mapping.cnic] : '';
+        const formattedCnic = formatCNIC(cnicRaw);
+
+        if (formattedCnic.length !== 15) { errorCount++; continue; }
+
+        const staffObj = staffMembers.find(s => s.name === (mapping.staff !== -1 ? cells[mapping.staff] : ''));
+
+        toUpsert.push({
+          cnic: formattedCnic,
+          name: mapping.name !== -1 ? cells[mapping.name] : 'Unknown',
+          phone: mapping.phone !== -1 ? formatPhone(cells[mapping.phone]) : '',
+          area: mapping.area !== -1 ? cells[mapping.area] : 'Other',
+          caste: mapping.caste !== -1 ? cells[mapping.caste] : 'Other',
+          reference: mapping.ref !== -1 ? cells[mapping.ref] : 'Other',
+          assigned_to: staffObj ? staffObj.id : null,
+          edd: mapping.edd !== -1 && cells[mapping.edd] ? cells[mapping.edd] : new Date(Date.now() + Math.random() * 200 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          intent: 'Medium', preference: 'Undecided', status: 'Active',
+          registration_date: new Date().toISOString(), last_contact: new Date().toISOString()
+        });
+      }
+
+      if (toUpsert.length > 0) {
+        const { data, error } = await supabase.from('patients').upsert(toUpsert, { onConflict: 'cnic' }).select();
+        if (!error) successCount += (data?.length || 0);
+        else errorCount += toUpsert.length;
+      }
+
+      setBatchProgress({ current: Math.min(i + BATCH_SIZE, rows.length), total: rows.length });
+      await new Promise(r => setTimeout(r, 0));
+    }
+
+    const { data: all } = await supabase.from('patients').select(`*, staff:assigned_to (name), interactions:interactions (*, staff:staff_id (name))`).order('registration_date', { ascending: false });
+    if (all) {
+      setPatients(all.map(p => ({
+        uuid: p.id, id: p.cnic, name: p.name, phone: p.phone, area: p.area, caste: p.caste, reference: p.reference,
+        assignedTo: p.staff?.name || 'Unassigned', edd: p.edd, intent: p.intent, preference: p.preference, status: p.status,
+        registrationDate: p.registration_date, lastContact: p.last_contact,
+        interactions: p.interactions?.map(i => ({
+          uuid: i.id, id: i.id, date: i.date, type: i.type, staff: i.staff?.name || 'System', notes: i.notes, intent: i.intent, preference: i.preference
+        })).sort((a, b) => new Date(b.date) - new Date(a.date)) || []
+      })));
+    }
+
+    setImportStatus(`success: Processed ${rows.length} records. Imported/Updated: ${successCount}. Errors: ${errorCount}.`);
+    setBatchProgress(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const cancelPdfImport = () => {
+    setPdfImportPreview(null);
+    setImportStatus(null);
+    setBatchProgress(null);
+  };
+
+  const confirmPdfImport = async () => {
+    if (!pdfImportPreview) return;
+    const { rows, mapping } = pdfImportPreview;
+    try {
+      await runBulkPatientUpsert(rows, mapping);
+    } finally {
+      setPdfImportPreview(null);
+    }
+  };
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    setPdfImportPreview(null);
     setImportStatus(null);
     setBatchProgress({ current: 0, total: 0 });
 
     const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
     let dataRows = [];
-    let m = { name: 0, cnic: 1, phone: 2, area: 3, caste: 4, ref: 5, staff: 6, edd: 7 }; // default mapping
-
-    const processExtractedRows = async (rows, mapping) => {
-      const BATCH_SIZE = 50;
-      let successCount = 0;
-      let errorCount = 0;
-
-      setBatchProgress({ current: 0, total: rows.length });
-
-      for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-        const chunk = rows.slice(i, i + BATCH_SIZE);
-        const toUpsert = [];
-
-        for (const cells of chunk) {
-          const cnicRaw = mapping.cnic !== -1 && cells[mapping.cnic] ? cells[mapping.cnic] : '';
-          const formattedCnic = formatCNIC(cnicRaw);
-
-          if (formattedCnic.length !== 15) { errorCount++; continue; }
-
-          const staffObj = staffMembers.find(s => s.name === (mapping.staff !== -1 ? cells[mapping.staff] : ''));
-
-          toUpsert.push({
-            cnic: formattedCnic,
-            name: mapping.name !== -1 ? cells[mapping.name] : 'Unknown',
-            phone: mapping.phone !== -1 ? formatPhone(cells[mapping.phone]) : '',
-            area: mapping.area !== -1 ? cells[mapping.area] : 'Other',
-            caste: mapping.caste !== -1 ? cells[mapping.caste] : 'Other',
-            reference: mapping.ref !== -1 ? cells[mapping.ref] : 'Other',
-            assigned_to: staffObj ? staffObj.id : null,
-            edd: mapping.edd !== -1 && cells[mapping.edd] ? cells[mapping.edd] : new Date(Date.now() + Math.random() * 200 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            intent: 'Medium', preference: 'Undecided', status: 'Active',
-            registration_date: new Date().toISOString(), last_contact: new Date().toISOString()
-          });
-        }
-
-        if (toUpsert.length > 0) {
-          const { data, error } = await supabase.from('patients').upsert(toUpsert, { onConflict: 'cnic' }).select();
-          if (!error) successCount += (data?.length || 0);
-          else errorCount += toUpsert.length;
-        }
-
-        setBatchProgress({ current: Math.min(i + BATCH_SIZE, rows.length), total: rows.length });
-        await new Promise(r => setTimeout(r, 0));
-      }
-
-      // Final Refresh
-      const { data: all } = await supabase.from('patients').select(`*, staff:assigned_to (name), interactions:interactions (*, staff:staff_id (name))`).order('registration_date', { ascending: false });
-      if (all) {
-        setPatients(all.map(p => ({
-          uuid: p.id, id: p.cnic, name: p.name, phone: p.phone, area: p.area, caste: p.caste, reference: p.reference,
-          assignedTo: p.staff?.name || 'Unassigned', edd: p.edd, intent: p.intent, preference: p.preference, status: p.status,
-          registrationDate: p.registration_date, lastContact: p.last_contact,
-          interactions: p.interactions?.map(i => ({
-            uuid: i.id, id: i.id, date: i.date, type: i.type, staff: i.staff?.name || 'System', notes: i.notes, intent: i.intent, preference: i.preference
-          })).sort((a, b) => new Date(b.date) - new Date(a.date)) || []
-        })));
-      }
-
-      setImportStatus(`success: Processed ${rows.length} records. Imported/Updated: ${successCount}. Errors: ${errorCount}.`);
-      setBatchProgress(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    };
+    const m = { name: 0, cnic: 1, phone: 2, area: 3, caste: 4, ref: 5, staff: 6, edd: 7 };
 
     if (isPDF) {
-      setImportStatus('Parsing PDF...');
+      setImportStatus('Parsing PDF…');
       try {
         const fullText = await extractTextFromPDF(file);
         console.log('[PDF Import] Extracted text length:', fullText.length);
 
-        const parsedPatients = parseOPDPatients(fullText);
-        console.log('[PDF Import] Parsed patients count:', parsedPatients.length);
+        const { format, patients: parsedPatients, parseError } = parsePdfPatientsForImport(fullText);
+        console.log('[PDF Import] format:', format, 'count:', parsedPatients?.length, parseError || '');
 
-        if (parsedPatients.length === 0) {
-          setImportStatus('error: Could not extract patient records from this PDF. Ensure it is an OPD report with CNIC data.');
+        if (parseError === 'maternal_marker_but_no_rows') {
+          setImportStatus('error: This PDF looks like a Maternal Health Register, but no patient rows could be parsed. Try re-exporting from the source system.');
           setBatchProgress(null);
+          if (fileInputRef.current) fileInputRef.current.value = '';
           return;
         }
 
-        // Convert parsed patients into the dataRows format expected by processExtractedRows
-        // Format: [name, cnic, phone, area, caste, reference, staff, edd]
-        for (const p of parsedPatients) {
-          dataRows.push([p.name, p.cnic, p.phone, p.address, 'Other', 'OPD', '', '']);
+        if (!parsedPatients.length) {
+          setImportStatus('error: No patient rows found. Supported PDFs: MNHC Maternal Health Register (ANC), or the legacy OPD export with Female + CNIC layout.');
+          setBatchProgress(null);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+          return;
         }
 
-        setImportStatus(`Extracted ${dataRows.length} patient records. Importing...`);
-        await processExtractedRows(dataRows, m);
+        const formatLabel = format === 'maternal' ? 'Maternal Health Register (MNHC / HISDU)' : 'OPD export';
+        for (const p of parsedPatients) {
+          dataRows.push([
+            p.name,
+            p.cnic,
+            p.phone,
+            p.address,
+            'Other',
+            format === 'maternal' ? 'MNHC Register' : 'OPD',
+            '',
+            p.eddIso || ''
+          ]);
+        }
+
+        setBatchProgress(null);
+        setPdfImportPreview({ rows: dataRows, mapping: m, formatLabel, fileName: file.name });
+        setImportStatus(
+          `info: Parsed ${dataRows.length} row(s) from ${formatLabel}. Review the preview and click Confirm import. Existing CNICs will be updated (upsert), not duplicated.`
+        );
+        if (fileInputRef.current) fileInputRef.current.value = '';
       } catch (err) {
-        setImportStatus(`error: Failed to read PDF file. (${err.message})`);
+        setImportStatus(`error: Failed to read PDF. (${err.message})`);
         console.error('[PDF Import] Error:', err);
         setBatchProgress(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
       }
     } else {
       const reader = new FileReader();
@@ -686,7 +724,7 @@ export const AppProvider = ({ children }) => {
         };
 
         const rawHeaders = parseCSV(allLines[0]);
-        m = {
+        const csvMapping = {
           name: rawHeaders.findIndex(h => /name|full/i.test(h)),
           cnic: rawHeaders.findIndex(h => /cnic|id|identity/i.test(h)),
           phone: rawHeaders.findIndex(h => /phone|mobile|contact/i.test(h)),
@@ -698,7 +736,7 @@ export const AppProvider = ({ children }) => {
         };
 
         dataRows = allLines.slice(1).map(line => parseCSV(line));
-        await processExtractedRows(dataRows, m);
+        await runBulkPatientUpsert(dataRows, csvMapping);
       };
       reader.readAsText(file);
     }
@@ -937,6 +975,9 @@ export const AppProvider = ({ children }) => {
     handleReopenCase,
     handleUpdateInteraction,
     handleFileUpload,
+    pdfImportPreview,
+    cancelPdfImport,
+    confirmPdfImport,
     handleAddStaff,
     handleDeleteStaff,
     handleCopyPhone,
@@ -945,7 +986,7 @@ export const AppProvider = ({ children }) => {
     batchProgress
   }), [
     isLoading, isSuperAdmin, activeTab, patients, selectedPatient, editingInteractionId, 
-    isEditingDetails, isClosingCase, showAddModal, addError, importStatus,
+    isEditingDetails, isClosingCase, showAddModal, addError, importStatus, pdfImportPreview,
     showNotifications, showFilters, isSidebarOpen, toastMessage, confirmDialog,
     calendarDate, areas, castes, references, staffMembers, alertConfig, currentUser,
     searchTerm, filterIntent, filterArea, filterCaste, filterReference, filterAssignedTo,

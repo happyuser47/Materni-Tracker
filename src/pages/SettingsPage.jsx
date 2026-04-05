@@ -4,7 +4,7 @@ import {
   BellRing, AlertCircle, Upload, Download, FileSpreadsheet,
   Briefcase, Trash2, CheckCircle2, UserCircle, Database, Settings,
   Users, ListChecks, ShieldAlert, Mail, Lock, Loader2, Eye, EyeOff, Skull, AlertTriangle,
-  X, ArrowUpRight
+  X, ArrowUpRight, Info
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ManageListCard } from '../components/ManageListCard';
@@ -24,7 +24,8 @@ export default function SettingsPage() {
     requestConfirm, areas, castes, references, staffMembers,
     alertConfig, currentUser, isSuperAdmin, handleAddStaff,
     handleDeleteStaff, handleFileUpload, handleModifyList, handleUpdateSettings,
-    handleWipeAllPatients, batchProgress
+    handleWipeAllPatients, batchProgress,
+    pdfImportPreview, cancelPdfImport, confirmPdfImport
   } = useApp();
   const { login, user } = useAuth();
 
@@ -456,9 +457,25 @@ export default function SettingsPage() {
         <div className="space-y-6 animate-in fade-in duration-300">
           {/* Status Banner */}
           {importStatus && (
-            <div className={`p-4 rounded-xl border flex items-start gap-3 animate-in slide-in-from-top duration-300 ${importStatus.startsWith('success') ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
-              {importStatus.startsWith('success') ? <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0" /> : <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />}
-              <p className="text-sm font-medium">{importStatus.replace('success:', '')}</p>
+            <div
+              className={`p-4 rounded-xl border flex items-start gap-3 animate-in slide-in-from-top duration-300 ${
+                importStatus.startsWith('error')
+                  ? 'bg-red-50 border-red-200 text-red-800'
+                  : importStatus.startsWith('info:')
+                    ? 'bg-sky-50 border-sky-200 text-sky-900'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              }`}
+            >
+              {importStatus.startsWith('error') ? (
+                <AlertCircle className="h-5 w-5 mt-0.5 shrink-0" />
+              ) : importStatus.startsWith('info:') ? (
+                <Info className="h-5 w-5 mt-0.5 shrink-0" />
+              ) : (
+                <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0" />
+              )}
+              <p className="text-sm font-medium">
+                {importStatus.replace(/^success:\s*/, '').replace(/^info:\s*/, '').replace(/^error:\s*/, '')}
+              </p>
             </div>
           )}
 
@@ -477,8 +494,15 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="px-6 py-5 md:px-8 md:py-6 flex-1 flex flex-col">
-                <p className="text-sm text-slate-500 mb-6 flex-1">
-                  Upload a CSV or PDF file to bulk import new patients. CSV format is standard; PDFs match the specific OPD generated report format. Duplicates (by CNIC) are automatically skipped.
+                <p className="text-sm text-slate-500 mb-4 flex-1">
+                  Upload CSV for immediate import, or PDF for a <span className="font-semibold text-slate-700">preview first</span>: MNHC / HISDU{' '}
+                  <span className="font-medium">Maternal Health Register (ANC)</span> (full name, CNIC, address, contact, EDD), or the legacy OPD export (Female + CNIC layout). Same CNIC rows are{' '}
+                  <span className="font-medium">upserted</span> (existing records updated).
+                </p>
+                <p className="text-xs text-slate-400 mb-6 leading-relaxed border-l-2 border-amber-200 pl-3">
+                  <span className="font-semibold text-amber-800">Safe testing:</span> use a Supabase{' '}
+                  <a href="https://supabase.com/docs/guides/platform/branches" className="underline hover:text-amber-900" target="_blank" rel="noreferrer">branch</a>{' '}
+                  or a second project with a copy of the schema; export a CSV backup from Data before large imports; PDF import always shows a preview so nothing is written until you confirm.
                 </p>
                 <div className="space-y-3">
                   <button
@@ -574,6 +598,116 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
+
+          {pdfImportPreview && (
+            <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-slate-900/55 backdrop-blur-sm animate-in fade-in duration-200">
+              <div
+                className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[88vh] flex flex-col border border-slate-200 overflow-hidden"
+                role="dialog"
+                aria-labelledby="pdf-import-preview-title"
+              >
+                <div className="px-5 py-4 border-b border-slate-100 flex items-start justify-between gap-3 bg-slate-50/80">
+                  <div>
+                    <h3 id="pdf-import-preview-title" className="font-bold text-slate-900 text-lg">
+                      Review PDF import
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {pdfImportPreview.formatLabel}
+                      <span className="text-slate-400"> · </span>
+                      {pdfImportPreview.fileName}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={cancelPdfImport}
+                    disabled={!!batchProgress}
+                    className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-40"
+                    aria-label="Close preview"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <p className="px-5 py-3 text-sm text-amber-800 bg-amber-50/90 border-b border-amber-100">
+                  Confirm only if these rows look correct. Importing will upsert by CNIC and will overwrite name, phone, area, EDD, and related fields for matches.
+                </p>
+                <div className="flex-1 overflow-auto px-5 py-3">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="text-slate-500 border-b border-slate-200">
+                        <th className="py-2 pr-3 font-semibold">Full name</th>
+                        <th className="py-2 pr-3 font-semibold">CNIC</th>
+                        <th className="py-2 pr-3 font-semibold">Contact</th>
+                        <th className="py-2 pr-3 font-semibold">Address</th>
+                        <th className="py-2 font-semibold">EDD</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pdfImportPreview.rows.slice(0, 45).map((row, idx) => (
+                        <tr key={idx} className="border-b border-slate-100 text-slate-800">
+                          <td className="py-2 pr-3 align-top max-w-[140px] break-words">{row[0]}</td>
+                          <td className="py-2 pr-3 align-top whitespace-nowrap font-mono">{row[1]}</td>
+                          <td className="py-2 pr-3 align-top whitespace-nowrap">{row[2]}</td>
+                          <td className="py-2 pr-3 align-top max-w-[200px] break-words text-slate-600">{row[3]}</td>
+                          <td className="py-2 align-top whitespace-nowrap">{row[7] || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {pdfImportPreview.rows.length > 45 && (
+                    <p className="text-xs text-slate-500 mt-3 text-center">
+                      + {pdfImportPreview.rows.length - 45} more row(s) — all will be imported on confirm.
+                    </p>
+                  )}
+                  {batchProgress && (
+                    <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                        <span>Importing</span>
+                        <span className="text-teal-600">
+                          {batchProgress.total > 0
+                            ? Math.round((batchProgress.current / batchProgress.total) * 100)
+                            : 0}
+                          %
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-teal-600 h-full transition-all duration-300 rounded-full"
+                          style={{
+                            width: `${batchProgress.total > 0 ? (batchProgress.current / batchProgress.total) * 100 : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="px-5 py-4 border-t border-slate-100 flex flex-wrap gap-3 justify-end bg-white">
+                  <button
+                    type="button"
+                    onClick={cancelPdfImport}
+                    disabled={!!batchProgress}
+                    className="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => confirmPdfImport()}
+                    disabled={!!batchProgress}
+                    className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 shadow-sm disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {batchProgress ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Importing…
+                      </>
+                    ) : (
+                      'Confirm import'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
