@@ -200,6 +200,7 @@ export default function PatientDirectory() {
                   <table className="hidden md:table w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
+                        <th className="p-4 font-medium whitespace-nowrap w-12 text-center">#</th>
                         <th className="p-4 font-medium whitespace-nowrap">Patient</th>
                         <th className="p-4 font-medium whitespace-nowrap">Status / Intent</th>
                         {currentUser?.role === 'Admin' && <th className="p-4 font-medium whitespace-nowrap">Assigned To</th>}
@@ -212,17 +213,20 @@ export default function PatientDirectory() {
                     <tbody className="divide-y divide-slate-100">
                       {visiblePatients.length === 0 ? (
                         <tr>
-                          <td colSpan={currentUser?.role === 'Admin' ? "7" : "6"} className="p-8 text-center text-slate-500">
+                          <td colSpan={currentUser?.role === 'Admin' ? "8" : "7"} className="p-8 text-center text-slate-500">
                             No patients found matching the criteria.
                           </td>
                         </tr>
                       ) : (
-                        visiblePatients.map(patient => (
+                        visiblePatients.map((patient, index) => (
                           <tr 
                             key={patient.id} 
                             onClick={() => setSelectedPatient(patient)}
                             className={`hover:bg-slate-50 transition-colors group cursor-pointer ${patient.status !== 'Active' ? 'bg-slate-50/50' : ''}`}
                           >
+                            <td className="p-4 text-slate-500 font-medium text-center">
+                              {safePage * PAGE_SIZE + index + 1}
+                            </td>
                             <td className="p-4">
                               <p className="font-semibold text-slate-900 whitespace-nowrap">{patient.name}</p>
                               <p className="text-sm text-slate-500 flex items-center mt-1 whitespace-nowrap">
@@ -247,14 +251,28 @@ export default function PatientDirectory() {
                             </td>
                             {currentUser?.role === 'Admin' && (
                               <td className="p-4">
-                                 <div className="flex items-center">
-                                   <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold mr-2 shrink-0 ${patient.assignedTo === 'Unassigned' ? 'bg-orange-100 text-orange-600' : 'bg-slate-200 text-slate-600'}`}>
-                                     {patient.assignedTo === 'Unassigned' ? 'U' : patient.assignedTo.charAt(0)}
-                                   </div>
-                                   <span className={`text-sm font-medium whitespace-nowrap ${patient.assignedTo === 'Unassigned' ? 'text-orange-600 italic' : 'text-slate-700'}`}>
-                                     {patient.assignedTo}
-                                   </span>
-                                 </div>
+                                <div className="flex flex-col gap-1.5">
+                                  {/* Primary Assignee */}
+                                  <div className="flex items-center gap-1.5">
+                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${patient.assignedTo === 'Unassigned' ? 'bg-orange-100 text-orange-600' : 'bg-teal-100 text-teal-700'}`}>
+                                      {patient.assignedTo === 'Unassigned' ? 'U' : patient.assignedTo.charAt(0)}
+                                    </div>
+                                    <span className={`text-sm font-medium whitespace-nowrap ${patient.assignedTo === 'Unassigned' ? 'text-orange-600 italic' : 'text-slate-800'}`}>
+                                      {patient.assignedTo}
+                                    </span>
+                                    <span className="text-[9px] font-bold bg-teal-100 text-teal-700 px-1 py-0.5 rounded shrink-0">1°</span>
+                                  </div>
+                                  {/* Secondary Assignee */}
+                                  {patient.secondaryAssignedTo && (
+                                    <div className="flex items-center gap-1.5">
+                                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-500 shrink-0">
+                                        {patient.secondaryAssignedTo.charAt(0)}
+                                      </div>
+                                      <span className="text-xs text-slate-500 whitespace-nowrap">{patient.secondaryAssignedTo}</span>
+                                      <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1 py-0.5 rounded shrink-0">2°</span>
+                                    </div>
+                                  )}
+                                </div>
                               </td>
                             )}
                             <td className="p-4 whitespace-nowrap">

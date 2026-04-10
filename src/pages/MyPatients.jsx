@@ -207,6 +207,7 @@ export default function MyPatients() {
             <table className="hidden md:table w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
+                  <th className="p-4 font-medium whitespace-nowrap w-12 text-center">#</th>
                   <th className="p-4 font-medium whitespace-nowrap">Patient</th>
                   <th className="p-4 font-medium whitespace-nowrap">Status / Intent</th>
                   <th className="p-4 font-medium whitespace-nowrap">EDD</th>
@@ -217,17 +218,20 @@ export default function MyPatients() {
               <tbody className="divide-y divide-slate-100">
                 {filteredMyPatientsList.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="p-8 text-center text-slate-500">
+                    <td colSpan="6" className="p-8 text-center text-slate-500">
                       No patients found in your personal workload.
                     </td>
                   </tr>
                 ) : (
-                  filteredMyPatientsList.map(patient => (
+                  filteredMyPatientsList.map((patient, index) => (
                     <tr
                       key={patient.id}
                       onClick={() => setSelectedPatient(patient)}
                       className={`hover:bg-slate-50 transition-colors group cursor-pointer ${patient.status !== 'Active' ? 'bg-slate-50/50' : ''}`}
                     >
+                      <td className="p-4 text-slate-500 font-medium text-center">
+                        {index + 1}
+                      </td>
                       <td className="p-4">
                         <p className="font-semibold text-slate-900 whitespace-nowrap">{patient.name}</p>
                         <p className="text-sm text-slate-500 flex items-center mt-1 whitespace-nowrap">

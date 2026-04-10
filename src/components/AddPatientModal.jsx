@@ -282,13 +282,43 @@ export default function AddPatientModal() {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Expected Delivery (EDD) *</label>
                   <input type="date" name="edd" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none" />
                 </div>
-                {currentUser?.role === 'Admin' && (
+                {currentUser?.role === 'Admin' ? (
+                  <>
+                    {/* Primary Assignment */}
+                    <div className="col-span-2 sm:col-span-1">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <label className="block text-sm font-medium text-slate-700">Primary Assignee *</label>
+                        <span className="text-[10px] font-bold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded border border-teal-200">PRIMARY</span>
+                      </div>
+                      <select name="assignedTo" defaultValue="Unassigned" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
+                        <option value="Unassigned">Unassigned</option>
+                        {staffNames.map(staff => <option key={staff} value={staff}>{staff}</option>)}
+                      </select>
+                      <p className="text-[10px] text-slate-400 mt-1">Main caseworker — responsible for follow-ups.</p>
+                    </div>
+                    {/* Secondary Assignment */}
+                    <div className="col-span-2 sm:col-span-1">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <label className="block text-sm font-medium text-slate-700">Secondary Assignee</label>
+                        <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">OPTIONAL</span>
+                      </div>
+                      <select name="secondaryAssignedTo" defaultValue="" className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
+                        <option value="">None</option>
+                        {staffNames.map(staff => <option key={staff} value={staff}>{staff}</option>)}
+                      </select>
+                      <p className="text-[10px] text-slate-400 mt-1">Supporting staff member — secondary contact.</p>
+                    </div>
+                  </>
+                ) : (
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Assign to Staff Member *</label>
-                    <select name="assignedTo" defaultValue="Unassigned" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
-                      <option value="Unassigned">Unassigned</option>
-                      {staffNames.map(staff => <option key={staff} value={staff}>{staff}</option>)}
-                    </select>
+                    <div className="flex items-center gap-2 p-3 bg-teal-50 border border-teal-200 rounded-lg">
+                      <span className="w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold shrink-0">{currentUser?.name?.charAt(0)}</span>
+                      <div>
+                        <p className="text-sm font-semibold text-teal-900">{currentUser?.name}</p>
+                        <p className="text-[11px] text-teal-600">You will be the Primary Assignee for this patient.</p>
+                      </div>
+                      <span className="ml-auto text-[10px] font-bold bg-teal-600 text-white px-2 py-1 rounded">PRIMARY</span>
+                    </div>
                   </div>
                 )}
               </div>

@@ -309,13 +309,30 @@ export default function PatientDetailModal() {
                       )}
                     </div>
                     {currentUser?.role === 'Admin' && (
-                      <div className="col-span-2 sm:col-span-1">
-                        <label className="block text-xs font-medium text-slate-600 mb-1">Assigned Staff</label>
-                        <select name="assignedTo" defaultValue={selectedPatient.assignedTo} className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white" required>
-                          <option value="Unassigned">Unassigned</option>
-                          {staffNames.map(staff => <option key={staff} value={staff}>{staff}</option>)}
-                        </select>
-                      </div>
+                      <>
+                        {/* Primary Assignee */}
+                        <div className="col-span-2 sm:col-span-1">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <label className="block text-xs font-medium text-slate-600">Primary Assignee</label>
+                            <span className="text-[9px] font-bold bg-teal-100 text-teal-700 px-1 py-0.5 rounded">1°</span>
+                          </div>
+                          <select name="assignedTo" defaultValue={selectedPatient.assignedTo} className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white" required>
+                            <option value="Unassigned">Unassigned</option>
+                            {staffNames.map(staff => <option key={staff} value={staff}>{staff}</option>)}
+                          </select>
+                        </div>
+                        {/* Secondary Assignee */}
+                        <div className="col-span-2 sm:col-span-1">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <label className="block text-xs font-medium text-slate-600">Secondary Assignee</label>
+                            <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1 py-0.5 rounded">2°</span>
+                          </div>
+                          <select name="secondaryAssignedTo" defaultValue={selectedPatient.secondaryAssignedTo || ''} className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white">
+                            <option value="">None</option>
+                            {staffNames.map(staff => <option key={staff} value={staff}>{staff}</option>)}
+                          </select>
+                        </div>
+                      </>
                     )}
                   </div>
                   <div className="flex justify-end gap-2 pt-2">
@@ -359,13 +376,30 @@ export default function PatientDetailModal() {
                     {/* Assigned To (Admin) OR Preference (Staff) */}
                     {currentUser?.role === 'Admin' ? (
                       <div className="bg-teal-50/50 p-3.5 sm:p-4 rounded-xl border border-teal-100 flex flex-col justify-center min-w-0">
-                         <div className="flex items-center mb-1">
+                         <div className="flex items-center mb-2">
                            <Briefcase className="h-3.5 w-3.5 mr-1.5 text-teal-500 shrink-0" />
-                           <p className="text-[10px] text-teal-600 font-bold uppercase tracking-wider truncate">Assigned To</p>
+                           <p className="text-[10px] text-teal-600 font-bold uppercase tracking-wider truncate">Assignment</p>
                          </div>
-                        <p className={`font-semibold text-sm sm:text-base truncate ${selectedPatient.assignedTo === 'Unassigned' ? 'text-orange-600 italic' : 'text-teal-700'}`}>
-                          {selectedPatient.assignedTo}
-                        </p>
+                        {/* Primary */}
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${selectedPatient.assignedTo === 'Unassigned' ? 'bg-orange-100 text-orange-600' : 'bg-teal-200 text-teal-800'}`}>
+                            {selectedPatient.assignedTo === 'Unassigned' ? 'U' : selectedPatient.assignedTo.charAt(0)}
+                          </div>
+                          <p className={`font-semibold text-sm truncate ${selectedPatient.assignedTo === 'Unassigned' ? 'text-orange-600 italic' : 'text-teal-800'}`}>
+                            {selectedPatient.assignedTo}
+                          </p>
+                          <span className="text-[9px] font-bold bg-teal-200 text-teal-800 px-1 py-0.5 rounded shrink-0">1°</span>
+                        </div>
+                        {/* Secondary */}
+                        {selectedPatient.secondaryAssignedTo && (
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold bg-slate-100 text-slate-500 shrink-0">
+                              {selectedPatient.secondaryAssignedTo.charAt(0)}
+                            </div>
+                            <p className="text-xs text-slate-500 truncate">{selectedPatient.secondaryAssignedTo}</p>
+                            <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1 py-0.5 rounded shrink-0">2°</span>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       selectedPatient.status === 'Active' ? (

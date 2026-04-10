@@ -320,6 +320,7 @@ export const AppProvider = ({ children }) => {
     const { data: pData } = await supabase.from('patients').select(`
       *,
       assigned_to_staff:staff!patients_assigned_to_fkey(name),
+      secondary_staff:staff!patients_secondary_assigned_to_fkey(id, name),
       interactions(*, interaction_staff:staff!interactions_staff_id_fkey(name))
     `);
 
@@ -333,6 +334,9 @@ export const AppProvider = ({ children }) => {
         caste: p.caste,
         reference: p.reference,
         assignedTo: p.assigned_to_staff ? p.assigned_to_staff.name : 'Unassigned',
+        assignedToId: p.assigned_to || null,
+        secondaryAssignedTo: p.secondary_staff ? p.secondary_staff.name : null,
+        secondaryAssignedToId: p.secondary_assigned_to || null,
         edd: p.edd,
         intent: p.intent,
         preference: p.preference,
@@ -378,14 +382,21 @@ export const AppProvider = ({ children }) => {
       return;
     }
 
+    // Primary assignee: staff worker auto-assigns self; admin can choose
     const assignedStaffName = currentUser?.role === 'Admin' ? (formData.get('assignedTo') || 'Unassigned') : (currentUser?.name || 'Unassigned');
     const assignedStaffObj = staffMembers.find(s => s.name === assignedStaffName);
     const assignedToId = assignedStaffObj ? assignedStaffObj.id : null;
+
+    // Secondary assignee: admin-only optional field
+    const secondaryStaffName = currentUser?.role === 'Admin' ? (formData.get('secondaryAssignedTo') || '') : '';
+    const secondaryStaffObj = staffMembers.find(s => s.name === secondaryStaffName);
+    const secondaryAssignedToId = secondaryStaffObj ? secondaryStaffObj.id : null;
 
     const newPatient = {
       cnic, name, phone: formData.get('phone'), area: formData.get('area'),
       caste: formData.get('caste'), reference: formData.get('reference'),
       assigned_to: assignedToId,
+      secondary_assigned_to: secondaryAssignedToId,
       edd: formData.get('edd'), intent: 'Medium', preference: 'Undecided',
       status: 'Active', registration_date: new Date().toISOString(), last_contact: new Date().toISOString()
     };
@@ -401,7 +412,9 @@ export const AppProvider = ({ children }) => {
 
     const mappedPatient = {
       uuid: pData.id, id: pData.cnic, name: pData.name, phone: pData.phone, area: pData.area, caste: pData.caste, reference: pData.reference,
-      assignedTo: assignedStaffName, edd: pData.edd, intent: pData.intent, preference: pData.preference, status: pData.status,
+      assignedTo: assignedStaffName, assignedToId,
+      secondaryAssignedTo: secondaryStaffObj?.name || null, secondaryAssignedToId,
+      edd: pData.edd, intent: pData.intent, preference: pData.preference, status: pData.status,
       registrationDate: pData.registration_date, lastContact: pData.last_contact,
       interactions: [{
         uuid: iData?.id, id: iData?.id, date: iData?.date, type: iData?.type, staff: currentUser?.name || 'Unknown', notes: iData?.notes, intent: iData?.intent, preference: iData?.preference
@@ -422,17 +435,30 @@ export const AppProvider = ({ children }) => {
     const assignedStaffObj = staffMembers.find(s => s.name === assignedStaffName);
     const assignedToId = assignedStaffObj ? assignedStaffObj.id : null;
 
+    const secondaryStaffName = currentUser?.role === 'Admin' ? (formData.get('secondaryAssignedTo') || '') : (selectedPatient.secondaryAssignedTo || '');
+    const secondaryStaffObj = staffMembers.find(s => s.name === secondaryStaffName);
+    const secondaryAssignedToId = secondaryStaffObj ? secondaryStaffObj.id : null;
+
     const updates = {
       name: formData.get('name'), phone: formData.get('phone'), area: formData.get('area'),
       caste: formData.get('caste'), reference: formData.get('reference'),
-      assigned_to: assignedToId, edd: formData.get('edd')
+      assigned_to: assignedToId,
+      secondary_assigned_to: secondaryAssignedToId,
+      edd: formData.get('edd')
     };
 
     await supabase.from('patients').update(updates).eq('id', selectedPatient.uuid);
 
     setPatients(prev => prev.map(p => {
       if (p.uuid === selectedPatient.uuid) {
-        return { ...p, ...updates, assignedTo: assignedStaffName, id: selectedPatient.id };
+        return { 
+          ...p, 
+          name: updates.name, phone: updates.phone, area: updates.area,
+          caste: updates.caste, reference: updates.reference, edd: updates.edd,
+          assignedTo: assignedStaffName, assignedToId,
+          secondaryAssignedTo: secondaryStaffObj?.name || null, secondaryAssignedToId,
+          id: selectedPatient.id
+        };
       }
       return p;
     }));
