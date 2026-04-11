@@ -44,15 +44,27 @@ export function PatientCard({ patient, onClick, isAdmin }) {
           )}
         </div>
         
-        {isAdmin && (
+        {isAdmin ? (
           <div>
             <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assigned To</p>
             <div className="flex items-center mt-0.5">
               <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold mr-1.5 shrink-0 ${patient.assignedTo === 'Unassigned' ? 'bg-orange-100 text-orange-600' : 'bg-slate-200 text-slate-600'}`}>
                 {patient.assignedTo === 'Unassigned' ? 'U' : patient.assignedTo.charAt(0)}
               </div>
-              <span className={`text-xs font-medium truncate ${patient.assignedTo === 'Unassigned' ? 'text-orange-600 italic' : 'text-slate-700'}`}>
+              <span className={`text-xs font-medium truncate mr-1.5 ${patient.assignedTo === 'Unassigned' ? 'text-orange-600 italic' : 'text-slate-700'}`}>
                 {patient.assignedTo}
+              </span>
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ${patient.assignmentType === 'Secondary' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                {patient.assignmentType === 'Secondary' ? 'Secondary' : 'Primary'}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assignment Type</p>
+            <div className="flex items-center mt-0.5">
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded w-fit ${patient.assignmentType === 'Secondary' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                {patient.assignmentType === 'Secondary' ? '🔵 Secondary' : '🟢 Primary'}
               </span>
             </div>
           </div>

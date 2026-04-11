@@ -17,7 +17,7 @@ export default function PatientDirectory() {
     setSelectedPatient, setShowAddModal, showFilters, setShowFilters,
     currentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent,
     filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference,
-    filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus,
+    filterAssignedTo, setFilterAssignedTo, filterAssignmentType, setFilterAssignmentType, filterStatus, setFilterStatus,
     filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd,
     uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount,
     filteredPatients
@@ -117,11 +117,19 @@ export default function PatientDirectory() {
                   <div className="pt-3 mt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 animate-in slide-in-from-top-2 fade-in duration-200">
                     
                     {currentUser?.role === 'Admin' && (
-                      <select className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white" value={filterAssignedTo} onChange={(e) => { setFilterAssignedTo(e.target.value); resetPage(); }}>
-                        <option value="All">All Staff</option>
-                        <option value="Unassigned">Unassigned</option>
-                        {staffNames.map(name => <option key={name} value={name}>{name}</option>)}
-                      </select>
+                      <>
+                        <select className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white" value={filterAssignedTo} onChange={(e) => { setFilterAssignedTo(e.target.value); resetPage(); }}>
+                          <option value="All">All Staff</option>
+                          <option value="Unassigned">Unassigned</option>
+                          {staffNames.map(name => <option key={name} value={name}>{name}</option>)}
+                        </select>
+
+                        <select className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white" value={filterAssignmentType} onChange={(e) => { setFilterAssignmentType(e.target.value); resetPage(); }}>
+                          <option value="All">All Assignment Types</option>
+                          <option value="Primary">Primary</option>
+                          <option value="Secondary">Secondary</option>
+                        </select>
+                      </>
                     )}
 
                     <select className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white" value={filterArea} onChange={(e) => { setFilterArea(e.target.value); resetPage(); }}>
@@ -251,27 +259,16 @@ export default function PatientDirectory() {
                             </td>
                             {currentUser?.role === 'Admin' && (
                               <td className="p-4">
-                                <div className="flex flex-col gap-1.5">
-                                  {/* Primary Assignee */}
-                                  <div className="flex items-center gap-1.5">
-                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${patient.assignedTo === 'Unassigned' ? 'bg-orange-100 text-orange-600' : 'bg-teal-100 text-teal-700'}`}>
-                                      {patient.assignedTo === 'Unassigned' ? 'U' : patient.assignedTo.charAt(0)}
-                                    </div>
-                                    <span className={`text-sm font-medium whitespace-nowrap ${patient.assignedTo === 'Unassigned' ? 'text-orange-600 italic' : 'text-slate-800'}`}>
-                                      {patient.assignedTo}
-                                    </span>
-                                    <span className="text-[9px] font-bold bg-teal-100 text-teal-700 px-1 py-0.5 rounded shrink-0">1°</span>
+                                <div className="flex items-center gap-1.5">
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${patient.assignedTo === 'Unassigned' ? 'bg-orange-100 text-orange-600' : 'bg-slate-200 text-slate-600'}`}>
+                                    {patient.assignedTo === 'Unassigned' ? 'U' : patient.assignedTo.charAt(0)}
                                   </div>
-                                  {/* Secondary Assignee */}
-                                  {patient.secondaryAssignedTo && (
-                                    <div className="flex items-center gap-1.5">
-                                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-100 text-slate-500 shrink-0">
-                                        {patient.secondaryAssignedTo.charAt(0)}
-                                      </div>
-                                      <span className="text-xs text-slate-500 whitespace-nowrap">{patient.secondaryAssignedTo}</span>
-                                      <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1 py-0.5 rounded shrink-0">2°</span>
-                                    </div>
-                                  )}
+                                  <span className={`text-sm font-medium whitespace-nowrap ${patient.assignedTo === 'Unassigned' ? 'text-orange-600 italic' : 'text-slate-800'}`}>
+                                    {patient.assignedTo}
+                                  </span>
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${patient.assignmentType === 'Secondary' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                    {patient.assignmentType === 'Secondary' ? 'Secondary' : 'Primary'}
+                                  </span>
                                 </div>
                               </td>
                             )}

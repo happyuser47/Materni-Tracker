@@ -92,6 +92,7 @@ export const AppProvider = ({ children }) => {
   const [filterCaste, setFilterCaste] = useState('All');
   const [filterReference, setFilterReference] = useState('All');
   const [filterAssignedTo, setFilterAssignedTo] = useState('All');
+  const [filterAssignmentType, setFilterAssignmentType] = useState('All');
   const [filterStatus, setFilterStatus] = useState('Active');
   const [filterRegStart, setFilterRegStart] = useState('');
   const [filterRegEnd, setFilterRegEnd] = useState('');
@@ -99,6 +100,7 @@ export const AppProvider = ({ children }) => {
   // Filtering States (My Patients Table)
   const [mySearchTerm, setMySearchTerm] = useState('');
   const [myFilterStatus, setMyFilterStatus] = useState('Active');
+  const [myFilterAssignmentType, setMyFilterAssignmentType] = useState('All');
 
   // Daily Activity State
   const [activityDateFilter, setActivityDateFilter] = useState('');
@@ -174,6 +176,7 @@ export const AppProvider = ({ children }) => {
       const matchesCaste = filterCaste === 'All' || p.caste === filterCaste;
       const matchesReference = filterReference === 'All' || p.reference === filterReference;
       const matchesAssigned = filterAssignedTo === 'All' || p.assignedTo === filterAssignedTo;
+      const matchesAssignmentType = filterAssignmentType === 'All' || p.assignmentType === filterAssignmentType;
       const matchesStatus = filterStatus === 'All' ? true :
                             filterStatus === 'Active' ? p.status === 'Active' :
                             filterStatus === 'Resolved' ? p.status !== 'Active' :
@@ -203,9 +206,9 @@ export const AppProvider = ({ children }) => {
         }
       }
 
-      return matchesSearch && matchesIntent && matchesArea && matchesCaste && matchesReference && matchesAssigned && matchesStatus && matchesRegDate;
+      return matchesSearch && matchesIntent && matchesArea && matchesCaste && matchesReference && matchesAssigned && matchesAssignmentType && matchesStatus && matchesRegDate;
     }).sort((a, b) => new Date(a.edd) - new Date(b.edd));
-  }, [patients, searchTerm, filterIntent, filterArea, filterCaste, filterReference, filterAssignedTo, filterStatus, filterRegStart, filterRegEnd]);
+  }, [patients, searchTerm, filterIntent, filterArea, filterCaste, filterReference, filterAssignedTo, filterAssignmentType, filterStatus, filterRegStart, filterRegEnd]);
 
   // Personal Directory Filtering ("My Patients" Table)
   const filteredMyPatientsList = useMemo(() => {
@@ -215,9 +218,10 @@ export const AppProvider = ({ children }) => {
                             myFilterStatus === 'Active' ? p.status === 'Active' :
                             myFilterStatus === 'Resolved' ? p.status !== 'Active' :
                             p.status === myFilterStatus;
-      return matchesSearch && matchesStatus;
+      const matchesAssignment = myFilterAssignmentType === 'All' || p.assignmentType === myFilterAssignmentType;
+      return matchesSearch && matchesStatus && matchesAssignment;
     }).sort((a, b) => new Date(a.edd) - new Date(b.edd));
-  }, [myPatientsList, mySearchTerm, myFilterStatus]);
+  }, [myPatientsList, mySearchTerm, myFilterStatus, myFilterAssignmentType]);
 
   // Daily Activity Filtering
   const filteredActivities = useMemo(() => {
@@ -317,12 +321,15 @@ export const AppProvider = ({ children }) => {
     }
 
     // Fetch Patients & Interactions
-    const { data: pData } = await supabase.from('patients').select(`
+    const { data: pData, error: pError } = await supabase.from('patients').select(`
       *,
       assigned_to_staff:staff!patients_assigned_to_fkey(name),
-      secondary_staff:staff!patients_secondary_assigned_to_fkey(id, name),
       interactions(*, interaction_staff:staff!interactions_staff_id_fkey(name))
     `);
+
+    if (pError) {
+      console.error("Supabase Fetch Error (Patients):", pError);
+    }
 
     if (pData) {
       const mapped = pData.map(p => ({
@@ -334,9 +341,7 @@ export const AppProvider = ({ children }) => {
         caste: p.caste,
         reference: p.reference,
         assignedTo: p.assigned_to_staff ? p.assigned_to_staff.name : 'Unassigned',
-        assignedToId: p.assigned_to || null,
-        secondaryAssignedTo: p.secondary_staff ? p.secondary_staff.name : null,
-        secondaryAssignedToId: p.secondary_assigned_to || null,
+        assignmentType: p.assignment_type || 'Primary',
         edd: p.edd,
         intent: p.intent,
         preference: p.preference,
@@ -382,21 +387,18 @@ export const AppProvider = ({ children }) => {
       return;
     }
 
-    // Primary assignee: staff worker auto-assigns self; admin can choose
     const assignedStaffName = currentUser?.role === 'Admin' ? (formData.get('assignedTo') || 'Unassigned') : (currentUser?.name || 'Unassigned');
     const assignedStaffObj = staffMembers.find(s => s.name === assignedStaffName);
     const assignedToId = assignedStaffObj ? assignedStaffObj.id : null;
 
-    // Secondary assignee: admin-only optional field
-    const secondaryStaffName = currentUser?.role === 'Admin' ? (formData.get('secondaryAssignedTo') || '') : '';
-    const secondaryStaffObj = staffMembers.find(s => s.name === secondaryStaffName);
-    const secondaryAssignedToId = secondaryStaffObj ? secondaryStaffObj.id : null;
+    // Assignment type: Primary or Secondary (admin can set, staff defaults to Primary)
+    const assignmentType = currentUser?.role === 'Admin' ? (formData.get('assignmentType') || 'Primary') : 'Primary';
 
     const newPatient = {
       cnic, name, phone: formData.get('phone'), area: formData.get('area'),
       caste: formData.get('caste'), reference: formData.get('reference'),
       assigned_to: assignedToId,
-      secondary_assigned_to: secondaryAssignedToId,
+      assignment_type: assignmentType,
       edd: formData.get('edd'), intent: 'Medium', preference: 'Undecided',
       status: 'Active', registration_date: new Date().toISOString(), last_contact: new Date().toISOString()
     };
@@ -412,8 +414,7 @@ export const AppProvider = ({ children }) => {
 
     const mappedPatient = {
       uuid: pData.id, id: pData.cnic, name: pData.name, phone: pData.phone, area: pData.area, caste: pData.caste, reference: pData.reference,
-      assignedTo: assignedStaffName, assignedToId,
-      secondaryAssignedTo: secondaryStaffObj?.name || null, secondaryAssignedToId,
+      assignedTo: assignedStaffName, assignmentType,
       edd: pData.edd, intent: pData.intent, preference: pData.preference, status: pData.status,
       registrationDate: pData.registration_date, lastContact: pData.last_contact,
       interactions: [{
@@ -435,15 +436,13 @@ export const AppProvider = ({ children }) => {
     const assignedStaffObj = staffMembers.find(s => s.name === assignedStaffName);
     const assignedToId = assignedStaffObj ? assignedStaffObj.id : null;
 
-    const secondaryStaffName = currentUser?.role === 'Admin' ? (formData.get('secondaryAssignedTo') || '') : (selectedPatient.secondaryAssignedTo || '');
-    const secondaryStaffObj = staffMembers.find(s => s.name === secondaryStaffName);
-    const secondaryAssignedToId = secondaryStaffObj ? secondaryStaffObj.id : null;
+    const assignmentType = currentUser?.role === 'Admin' ? (formData.get('assignmentType') || selectedPatient.assignmentType) : selectedPatient.assignmentType;
 
     const updates = {
       name: formData.get('name'), phone: formData.get('phone'), area: formData.get('area'),
       caste: formData.get('caste'), reference: formData.get('reference'),
       assigned_to: assignedToId,
-      secondary_assigned_to: secondaryAssignedToId,
+      assignment_type: assignmentType,
       edd: formData.get('edd')
     };
 
@@ -455,8 +454,7 @@ export const AppProvider = ({ children }) => {
           ...p, 
           name: updates.name, phone: updates.phone, area: updates.area,
           caste: updates.caste, reference: updates.reference, edd: updates.edd,
-          assignedTo: assignedStaffName, assignedToId,
-          secondaryAssignedTo: secondaryStaffObj?.name || null, secondaryAssignedToId,
+          assignedTo: assignedStaffName, assignmentType,
           id: selectedPatient.id
         };
       }
@@ -952,6 +950,8 @@ export const AppProvider = ({ children }) => {
     setFilterReference,
     filterAssignedTo,
     setFilterAssignedTo,
+    filterAssignmentType,
+    setFilterAssignmentType,
     filterStatus,
     setFilterStatus,
     filterRegStart,
@@ -962,6 +962,8 @@ export const AppProvider = ({ children }) => {
     setMySearchTerm,
     myFilterStatus,
     setMyFilterStatus,
+    myFilterAssignmentType,
+    setMyFilterAssignmentType,
     activityDateFilter,
     setActivityDateFilter,
     uniqueAreas,
@@ -1015,9 +1017,9 @@ export const AppProvider = ({ children }) => {
     isEditingDetails, isClosingCase, showAddModal, addError, importStatus, pdfImportPreview,
     showNotifications, showFilters, isSidebarOpen, toastMessage, confirmDialog,
     calendarDate, areas, castes, references, staffMembers, alertConfig, currentUser,
-    searchTerm, filterIntent, filterArea, filterCaste, filterReference, filterAssignedTo,
+    searchTerm, filterIntent, filterArea, filterCaste, filterReference, filterAssignedTo, filterAssignmentType,
     filterStatus, filterRegStart, filterRegEnd, mySearchTerm, myFilterStatus,
-    activityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames,
+    myFilterAssignmentType, activityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames,
     activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming,
     myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive,
     dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities,

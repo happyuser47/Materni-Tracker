@@ -15,8 +15,7 @@ import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone
 
 
 export default function MyPatients() {
-  const { activeTab, setActiveTab, patients, setPatients, selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, showAddModal, setShowAddModal, addError, setAddError, importStatus, setImportStatus, showNotifications, setShowNotifications, showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, toastMessage, setToastMessage, confirmDialog, setConfirmDialog, requestConfirm, closeConfirm, calendarDate, setCalendarDate, areas, setAreas, castes, setCastes, references, setReferences, staffMembers, setStaffMembers, alertConfig, setAlertConfig, currentUser, setCurrentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent, filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference, filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming, myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities, filteredPatients, filteredMyPatientsList, filteredActivities, activitySummary, teamPerformance, calendarYear, calendarMonth, daysInMonth, firstDayIndex, getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, handleAddInteraction, handleCloseCase, handleReopenCase, handleUpdateInteraction, handleFileUpload, handleAddStaff, handleDeleteStaff, handleCopyPhone, handleDeletePatient } = useApp();
-
+  const { activeTab, setActiveTab, patients, setPatients, selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, showAddModal, setShowAddModal, addError, setAddError, importStatus, setImportStatus, showNotifications, setShowNotifications, showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, toastMessage, setToastMessage, confirmDialog, setConfirmDialog, requestConfirm, closeConfirm, calendarDate, setCalendarDate, areas, setAreas, castes, setCastes, references, setReferences, staffMembers, setStaffMembers, alertConfig, setAlertConfig, currentUser, setCurrentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent, filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference, filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, myFilterAssignmentType, setMyFilterAssignmentType, activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming, myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities, filteredPatients, filteredMyPatientsList, filteredActivities, activitySummary, teamPerformance, calendarYear, calendarMonth, daysInMonth, firstDayIndex, getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, handleAddInteraction, handleCloseCase, handleReopenCase, handleUpdateInteraction, handleFileUpload, handleAddStaff, handleDeleteStaff, handleCopyPhone, handleDeletePatient } = useApp();
 
   return (
     <>
@@ -163,25 +162,37 @@ export default function MyPatients() {
                 onChange={(e) => setMySearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex items-center bg-slate-100 p-1 rounded-lg shrink-0">
-              <button
-                onClick={() => setMyFilterStatus('Active')}
-                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${myFilterStatus === 'Active' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+            <div className="flex items-center gap-2 shrink-0 overflow-x-auto">
+              <select
+                value={myFilterAssignmentType || 'All'}
+                onChange={(e) => setMyFilterAssignmentType(e.target.value)}
+                className="bg-slate-100 text-slate-700 text-xs font-medium px-2 py-1.5 rounded-lg outline-none border border-transparent focus:border-slate-300"
               >
-                Active ({myActive.length})
-              </button>
-              <button
-                onClick={() => setMyFilterStatus('Resolved')}
-                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${myFilterStatus === 'Resolved' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                Closed
-              </button>
-              <button
-                onClick={() => setMyFilterStatus('All')}
-                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${myFilterStatus === 'All' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                All
-              </button>
+                <option value="All">All Types</option>
+                <option value="Primary">🟢 Primary</option>
+                <option value="Secondary">🔵 Secondary</option>
+              </select>
+
+              <div className="flex items-center bg-slate-100 p-1 rounded-lg shrink-0">
+                <button
+                  onClick={() => setMyFilterStatus('Active')}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${myFilterStatus === 'Active' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Active ({myActive.length})
+                </button>
+                <button
+                  onClick={() => setMyFilterStatus('Resolved')}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${myFilterStatus === 'Resolved' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Closed
+                </button>
+                <button
+                  onClick={() => setMyFilterStatus('All')}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${myFilterStatus === 'All' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  All
+                </button>
+              </div>
             </div>
           </div>
           <div className="overflow-auto flex-1">
@@ -209,6 +220,7 @@ export default function MyPatients() {
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
                   <th className="p-4 font-medium whitespace-nowrap w-12 text-center">#</th>
                   <th className="p-4 font-medium whitespace-nowrap">Patient</th>
+                  <th className="p-4 font-medium whitespace-nowrap">Assignment</th>
                   <th className="p-4 font-medium whitespace-nowrap">Status / Intent</th>
                   <th className="p-4 font-medium whitespace-nowrap">EDD</th>
                   <th className="p-4 font-medium whitespace-nowrap">Last Contact</th>
@@ -237,6 +249,11 @@ export default function MyPatients() {
                         <p className="text-sm text-slate-500 flex items-center mt-1 whitespace-nowrap">
                           <Phone className="h-3 w-3 mr-1" /> {patient.phone}
                         </p>
+                      </td>
+                      <td className="p-4">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded w-fit ${patient.assignmentType === 'Secondary' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                          {patient.assignmentType === 'Secondary' ? '🔵 Secondary' : '🟢 Primary'}
+                        </span>
                       </td>
                       <td className="p-4">
                         {patient.status === 'Active' ? (
