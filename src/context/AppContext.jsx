@@ -341,7 +341,7 @@ export const AppProvider = ({ children }) => {
         caste: p.caste,
         reference: p.reference,
         assignedTo: p.assigned_to_staff ? p.assigned_to_staff.name : 'Unassigned',
-        assignmentType: p.assignment_type || 'Primary',
+        assignmentType: p.assignment_type || 'Secondary',
         edd: p.edd,
         intent: p.intent,
         preference: p.preference,
@@ -391,8 +391,8 @@ export const AppProvider = ({ children }) => {
     const assignedStaffObj = staffMembers.find(s => s.name === assignedStaffName);
     const assignedToId = assignedStaffObj ? assignedStaffObj.id : null;
 
-    // Assignment type: Primary or Secondary (admin can set, staff defaults to Primary)
-    const assignmentType = currentUser?.role === 'Admin' ? (formData.get('assignmentType') || 'Primary') : 'Primary';
+    // Assignment type: Primary or Secondary (admin can set, staff defaults to Secondary)
+    const assignmentType = currentUser?.role === 'Admin' ? (formData.get('assignmentType') || 'Secondary') : 'Secondary';
 
     const newPatient = {
       cnic, name, phone: formData.get('phone'), area: formData.get('area'),

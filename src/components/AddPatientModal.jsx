@@ -295,11 +295,11 @@ export default function AddPatientModal() {
                     {/* Assignment Type */}
                     <div className="col-span-2 sm:col-span-1">
                       <label className="block text-sm font-medium text-slate-700 mb-1">Assignment Type *</label>
-                      <select name="assignmentType" defaultValue="Primary" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
+                      <select name="assignmentType" defaultValue="Secondary" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
                         <option value="Primary">🟢 Primary Case</option>
                         <option value="Secondary">🔵 Secondary Case</option>
                       </select>
-                      <p className="text-[10px] text-slate-400 mt-1">Primary = main responsibility. Secondary = supporting role.</p>
+                      <p className="text-[10px] text-slate-400 mt-1">Secondary = default supportive role. Primary = main responsibility.</p>
                     </div>
                   </>
                 ) : (
@@ -308,9 +308,9 @@ export default function AddPatientModal() {
                       <span className="w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold shrink-0">{currentUser?.name?.charAt(0)}</span>
                       <div>
                         <p className="text-sm font-semibold text-teal-900">{currentUser?.name}</p>
-                        <p className="text-[11px] text-teal-600">You will be assigned as Primary for this patient.</p>
+                        <p className="text-[11px] text-teal-600">You will be assigned as Secondary for this patient.</p>
                       </div>
-                      <span className="ml-auto text-[10px] font-bold bg-teal-600 text-white px-2 py-1 rounded">PRIMARY</span>
+                      <span className="ml-auto text-[10px] font-bold bg-blue-600 text-white px-2 py-1 rounded">SECONDARY</span>
                     </div>
                   </div>
                 )}

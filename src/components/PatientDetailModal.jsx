@@ -319,7 +319,7 @@ export default function PatientDetailModal() {
                         </div>
                         <div className="col-span-2 sm:col-span-1">
                           <label className="block text-xs font-medium text-slate-600 mb-1">Assignment Type</label>
-                          <select name="assignmentType" defaultValue={selectedPatient.assignmentType || 'Primary'} className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white" required>
+                          <select name="assignmentType" defaultValue={selectedPatient.assignmentType || 'Secondary'} className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white" required>
                             <option value="Primary">🟢 Primary Case</option>
                             <option value="Secondary">🔵 Secondary Case</option>
                           </select>
