@@ -2,12 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   Users, Search, Filter, Phone, MapPin, 
-  UserPlus, Edit2, Eye, 
+  UserPlus, Edit2, Eye, Download,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Badge } from '../components/Badge';
 import { PatientCard } from '../components/PatientCard';
-import { calculateDaysUntil, formatDate } from '../utils/helpers';
+import { calculateDaysUntil, formatDate, exportDataToCSV } from '../utils/helpers';
 import { OUTCOMES } from '../lib/constants';
 
 const PAGE_SIZE = 25;
@@ -60,14 +60,24 @@ export default function PatientDirectory() {
                         : 'Manage and track all registered pregnant women and past cases.'}
                   </p>
                 </div>
-                <button 
-                  onClick={() => setShowAddModal(true)}
-                  className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base font-medium shadow-sm flex items-center transition-colors shrink-0"
-                >
-                  <UserPlus className="h-4 w-4 sm:mr-2 shrink-0" />
-                  <span className="hidden sm:inline whitespace-nowrap">New Registration</span>
-                  <span className="inline sm:hidden whitespace-nowrap">Add New</span>
-                </button>
+                <div className="flex gap-2 shrink-0 items-center">
+                  <button 
+                    onClick={() => exportDataToCSV(filteredPatients)}
+                    className="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base font-medium shadow-sm flex items-center transition-colors shrink-0"
+                  >
+                    <Download className="h-4 w-4 sm:mr-2 shrink-0 text-slate-500" />
+                    <span className="hidden sm:inline whitespace-nowrap">Export Excel</span>
+                  </button>
+
+                  <button 
+                    onClick={() => setShowAddModal(true)}
+                    className="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base font-medium shadow-sm flex items-center transition-colors shrink-0"
+                  >
+                    <UserPlus className="h-4 w-4 sm:mr-2 shrink-0" />
+                    <span className="hidden sm:inline whitespace-nowrap">New Registration</span>
+                    <span className="inline sm:hidden whitespace-nowrap">Add</span>
+                  </button>
+                </div>
               </div>
 
               {/* SMART COMPACT FILTERS */}

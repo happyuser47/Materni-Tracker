@@ -73,15 +73,20 @@ export const generateCSVTemplate = () => {
 };
 
 export const exportDataToCSV = (patients) => {
-  const headers = ['CNIC', 'Name', 'Phone', 'Area', 'Caste', 'Reference', 'AssignedTo', 'RegistrationDate', 'EDD', 'Status', 'Intent', 'Preference', 'LastContact'];
-  const rows = patients.map(p => 
-    `"${p.id}","${p.name}","${p.phone}","${p.area}","${p.caste}","${p.reference}","${p.assignedTo}","${p.registrationDate}","${p.edd}","${p.status}","${p.intent}","${p.preference}","${p.lastContact}"`
-  );
+  const headers = ['#', 'CNIC', 'Name', 'Phone', 'Area', 'Caste', 'Reference', 'Primary Worker', 'Role', 'Status', 'Intent', 'Preference', 'EDD', 'Days Until EDD', 'Registration Date', 'Last Contact', 'Follow-up Count'];
+  
+  const rows = patients.map((p, index) => {
+    const daysUntilEDD = calculateDaysUntil(p.edd);
+    const interactionCount = p.interactions?.length || 0;
+    return `"${index + 1}","${p.id}","${p.name}","${p.phone}","${p.area}","${p.caste}","${p.reference}","${p.assignedTo}","${p.assignmentType || 'Secondary'}","${p.status}","${p.intent}","${p.preference}","${formatDate(p.edd)}","${daysUntilEDD}","${formatDate(p.registrationDate)}","${formatDate(p.lastContact)}","${interactionCount}"`;
+  });
+  
   const csvContent = [headers.join(','), ...rows].join('\n');
   
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  // Adding BOM (\uFEFF) to make Excel parse UTF-8 correctly automatically
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `MaterniTrack_Export_${new Date().toISOString().split('T')[0]}.csv`;
+  link.download = `Patient_Export_${new Date().toISOString().split('T')[0]}.csv`;
   link.click();
 };
