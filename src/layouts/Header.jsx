@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   BellRing, ChevronRight, Activity, Settings, BarChart2, LogOut, Menu
 } from 'lucide-react';
-import { calculateDaysUntil, formatDate } from '../utils/helpers';
+import { calculateDaysUntil, formatDate, getPatientAlertType } from '../utils/helpers';
 
 
 export default function Header() {
@@ -110,11 +110,16 @@ export default function Header() {
                                   </span>
                                 )}
                               </div>
-                              {calculateDaysUntil(patient.edd) <= (alertConfig?.eddProximity || 30) ? (
-                                <span className="text-[10px] uppercase font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 whitespace-nowrap shrink-0">Delivery Due</span>
-                              ) : (
-                                <span className="text-[10px] uppercase font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap shrink-0">Contact Overdue</span>
-                              )}
+                              {(() => {
+                                const alertType = getPatientAlertType(patient, alertConfig);
+                                if (alertType === 'Delivery Due') {
+                                  return <span className="text-[10px] uppercase font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 whitespace-nowrap shrink-0">Delivery Due</span>;
+                                } else if (alertType === 'Follow-up Due') {
+                                  return <span className="text-[10px] uppercase font-bold bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-100 whitespace-nowrap shrink-0">Follow-up Due</span>;
+                                } else {
+                                  return <span className="text-[10px] uppercase font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap shrink-0">Contact Overdue</span>;
+                                }
+                              })()}
                             </div>
                             <div className="text-xs text-slate-500 flex justify-between items-center mt-1.5">
                               <span><span className="font-medium text-orange-600">{calculateDaysUntil(patient.edd)} days left</span> • EDD: {formatDate(patient.edd)}</span>

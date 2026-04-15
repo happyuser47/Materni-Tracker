@@ -45,19 +45,35 @@ export const isPatientOverdue = (patient, alertConfig) => {
   if (!patient.edd || patient.status !== 'Active') return false;
   
   const daysToEdd = calculateDaysUntil(patient.edd);
-  const daysSinceContact = calculateDaysUntil(patient.lastContact) * -1;
   
-  // Broaden criteria:
-  // 1. Critical proximity to EDD regardless of contact (Uses dynamic config)
+  // 1. Delivery Due Proximity (Highest priority alert)
   const isNearDelivery = daysToEdd >= 0 && daysToEdd <= (alertConfig?.eddProximity || 30);
+  if (isNearDelivery) return true;
+
+  // 2. Explicit Next Interaction Date Overdue
+  if (patient.nextInteractionDate) {
+    const daysToNext = calculateDaysUntil(patient.nextInteractionDate);
+    if (daysToNext <= 0) return true;
+  }
   
-  // 2. Overdue for contact based on dynamic config
+  // 3. Fallback: Overdue based on last contact gap
+  const daysSinceContact = calculateDaysUntil(patient.lastContact) * -1;
   const isOverdueContact = daysSinceContact > (alertConfig?.contactGap || 14);
   
-  // 3. Or just generally nearing EDD while overdue
-  const isNearingDeliveryAndOverdue = daysToEdd <= (alertConfig?.eddProximity || 30) && isOverdueContact;
+  return isOverdueContact;
+};
 
-  return isNearDelivery || isNearingDeliveryAndOverdue;
+export const getPatientAlertType = (patient, alertConfig) => {
+  if (!patient.edd || patient.status !== 'Active') return null;
+  const daysToEdd = calculateDaysUntil(patient.edd);
+  if (daysToEdd >= 0 && daysToEdd <= (alertConfig?.eddProximity || 30)) return 'Delivery Due';
+  
+  if (patient.nextInteractionDate) {
+    const daysToNext = calculateDaysUntil(patient.nextInteractionDate);
+    if (daysToNext <= 0) return 'Follow-up Due';
+  }
+  
+  return 'Contact Overdue';
 };
 
 // CSV Helper Functions

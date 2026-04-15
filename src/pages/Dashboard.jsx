@@ -10,7 +10,7 @@ import {
 import { Badge } from '../components/Badge';
 import { ManageListCard } from '../components/ManageListCard';
 import { OUTCOMES } from '../lib/constants';
-import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone } from '../utils/helpers';
+import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone, getPatientAlertType } from '../utils/helpers';
 
 
 export default function Dashboard() {
@@ -118,8 +118,14 @@ export default function Dashboard() {
                               {patient.assignedTo}
                             </span>
                           )}
+                        <div className="shrink-0">
+                          {(() => {
+                            const alertType = getPatientAlertType(patient, alertConfig);
+                            if (alertType === 'Delivery Due') return <Badge type="Delivery">Delivery Due</Badge>;
+                            if (alertType === 'Follow-up Due') return <Badge type="Alert">Follow-up Due</Badge>;
+                            return <Badge type="Urgent">Contact Overdue</Badge>;
+                          })()}
                         </div>
-                        <div className="shrink-0"><Badge type="Alert">Contact Overdue</Badge></div>
                       </div>
                       <div className="text-sm text-slate-500 flex items-center justify-between">
                         <span><span className="font-medium text-orange-600">{calculateDaysUntil(patient.edd)} days left</span> • EDD: {formatDate(patient.edd)}</span>
