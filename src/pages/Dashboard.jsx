@@ -118,6 +118,7 @@ export default function Dashboard() {
                               {patient.assignedTo}
                             </span>
                           )}
+                        </div>
                         <div className="shrink-0">
                           {(() => {
                             const alertType = getPatientAlertType(patient, alertConfig);
