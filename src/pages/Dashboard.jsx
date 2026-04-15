@@ -128,9 +128,36 @@ export default function Dashboard() {
                           })()}
                         </div>
                       </div>
-                      <div className="text-sm text-slate-500 flex items-center justify-between">
-                        <span><span className="font-medium text-orange-600">{calculateDaysUntil(patient.edd)} days left</span> • EDD: {formatDate(patient.edd)}</span>
-                        <span className="flex items-center text-teal-600 font-medium">
+                      <div className="text-sm text-slate-500 flex items-center justify-between mt-1.5">
+                        {(() => {
+                          const alertType = getPatientAlertType(patient, alertConfig);
+                          if (alertType === 'Follow-up Due') {
+                            return (
+                              <span>
+                                <span className="font-medium text-orange-600">Follow-up: {formatDate(patient.nextInteractionDate)}</span>
+                                <span className="text-slate-400 mx-2">•</span>
+                                EDD: {formatDate(patient.edd)}
+                              </span>
+                            );
+                          } else if (alertType === 'Contact Overdue') {
+                            return (
+                              <span>
+                                <span className="font-medium text-red-600">Last: {formatDate(patient.lastContact)}</span>
+                                <span className="text-slate-400 mx-2">•</span>
+                                EDD: {formatDate(patient.edd)}
+                              </span>
+                            );
+                          } else {
+                            return (
+                              <span>
+                                <span className="font-medium text-blue-600">{calculateDaysUntil(patient.edd)} days left</span>
+                                <span className="text-slate-400 mx-2">•</span>
+                                EDD: {formatDate(patient.edd)}
+                              </span>
+                            );
+                          }
+                        })()}
+                        <span className="flex items-center text-teal-600 font-medium shrink-0 ml-2">
                           Action <ChevronRight className="h-4 w-4 ml-1" />
                         </span>
                       </div>

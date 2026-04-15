@@ -122,8 +122,35 @@ export default function Header() {
                               })()}
                             </div>
                             <div className="text-xs text-slate-500 flex justify-between items-center mt-1.5">
-                              <span><span className="font-medium text-orange-600">{calculateDaysUntil(patient.edd)} days left</span> • EDD: {formatDate(patient.edd)}</span>
-                              <span className="text-teal-600 font-medium flex items-center">View <ChevronRight className="h-3 w-3 ml-0.5" /></span>
+                              {(() => {
+                                const alertType = getPatientAlertType(patient, alertConfig);
+                                if (alertType === 'Follow-up Due') {
+                                  return (
+                                    <span>
+                                      <span className="font-medium text-orange-600">Follow-up: {formatDate(patient.nextInteractionDate)}</span>
+                                      <span className="text-slate-400 mx-1.5">•</span>
+                                      EDD: {formatDate(patient.edd)}
+                                    </span>
+                                  );
+                                } else if (alertType === 'Contact Overdue') {
+                                  return (
+                                    <span>
+                                      <span className="font-medium text-red-600">Last: {formatDate(patient.lastContact)}</span>
+                                      <span className="text-slate-400 mx-1.5">•</span>
+                                      EDD: {formatDate(patient.edd)}
+                                    </span>
+                                  );
+                                } else {
+                                  return (
+                                    <span>
+                                      <span className="font-medium text-blue-600">{calculateDaysUntil(patient.edd)} days left</span>
+                                      <span className="text-slate-400 mx-1.5">•</span>
+                                      EDD: {formatDate(patient.edd)}
+                                    </span>
+                                  );
+                                }
+                              })()}
+                              <span className="text-teal-600 font-medium flex items-center shrink-0 ml-2">View <ChevronRight className="h-3 w-3 ml-0.5" /></span>
                             </div>
                           </li>
                         ))}
