@@ -1,6 +1,6 @@
 export const calculateDaysUntil = (dateString) => {
   if (!dateString) return 0;
-  const today = new Date('2026-03-12');
+  const today = new Date();
   today.setHours(0, 0, 0, 0);
   
   const target = new Date(dateString);
