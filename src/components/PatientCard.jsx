@@ -71,6 +71,22 @@ export function PatientCard({ patient, onClick, isAdmin }) {
         )}
       </div>
 
+      {/* Interaction Dates */}
+      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+        <div>
+          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Last Interaction</p>
+          <p className="text-sm font-semibold text-slate-800 mt-0.5">{formatDate(patient.lastContact)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Next Interaction</p>
+          {patient.nextInteractionDate ? (
+            <p className="text-sm font-semibold text-teal-700 mt-0.5">{formatDate(patient.nextInteractionDate)}</p>
+          ) : (
+            <p className="text-xs text-slate-400 italic mt-1">Not Set</p>
+          )}
+        </div>
+      </div>
+
       <div className="flex items-center justify-between pt-2">
         <div className="flex flex-wrap gap-1.5">
           <span className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded flex items-center">
