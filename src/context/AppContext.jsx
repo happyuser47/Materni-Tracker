@@ -478,13 +478,13 @@ export const AppProvider = ({ children }) => {
 
     const [{ data: iData }, { data: pData }] = await Promise.all([
       supabase.from('interactions').insert(newInteraction).select().single(),
-      supabase.from('patients').update({ intent: newIntent, preference: newPreference, last_contact: interactionData.date, next_interaction_date: interactionData.nextInteractionDate || patient.nextInteractionDate || null }).eq('id', patient.uuid).select().single()
+      supabase.from('patients').update({ intent: newIntent, preference: newPreference, last_contact: interactionData.date, next_interaction_date: interactionData.nextInteractionDate || null }).eq('id', patient.uuid).select().single()
     ]);
 
     setPatients(prev => prev.map(p => {
       if (p.uuid === patient.uuid) {
         return {
-          ...p, intent: newIntent, preference: newPreference, lastContact: interactionData.date, nextInteractionDate: interactionData.nextInteractionDate || p.nextInteractionDate,
+          ...p, intent: newIntent, preference: newPreference, lastContact: interactionData.date, nextInteractionDate: interactionData.nextInteractionDate || null,
           interactions: [{
             uuid: iData?.id, id: iData?.id, date: iData?.date, type: iData?.type, staff: currentUser?.name || 'Unknown', notes: iData?.notes, intent: iData?.intent, preference: iData?.preference, nextInteractionDate: iData?.next_interaction_date
           }, ...p.interactions].sort((a, b) => new Date(b.date) - new Date(a.date))
