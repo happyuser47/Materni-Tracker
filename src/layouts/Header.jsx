@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import {
-  BellRing, ChevronRight, Activity, Settings, BarChart2, LogOut, Menu, CheckCircle2
+  BellRing, ChevronRight, Activity, Settings, BarChart2, LogOut, Menu, CheckCircle2, X
 } from 'lucide-react';
 import { calculateDaysUntil, formatDate, getPatientAlertType } from '../utils/helpers';
 
@@ -135,16 +135,28 @@ export default function Header() {
                                   </span>
                                 )}
                               </div>
-                              {(() => {
-                                const alertType = getPatientAlertType(patient, alertConfig);
-                                if (alertType === 'Delivery Due') {
-                                  return <span className="text-[10px] uppercase font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 whitespace-nowrap shrink-0">Delivery Due</span>;
-                                } else if (alertType === 'Follow-up Due') {
-                                  return <span className="text-[10px] uppercase font-bold bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-100 whitespace-nowrap shrink-0">Follow-up Due</span>;
-                                } else {
-                                  return <span className="text-[10px] uppercase font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap shrink-0">Contact Overdue</span>;
-                                }
-                              })()}
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {(() => {
+                                  const alertType = getPatientAlertType(patient, alertConfig);
+                                  if (alertType === 'Delivery Due') {
+                                    return <span className="text-[10px] uppercase font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 whitespace-nowrap">Delivery Due</span>;
+                                  } else if (alertType === 'Follow-up Due') {
+                                    return <span className="text-[10px] uppercase font-bold bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-100 whitespace-nowrap">Follow-up Due</span>;
+                                  } else {
+                                    return <span className="text-[10px] uppercase font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap">Contact Overdue</span>;
+                                  }
+                                })()}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setHiddenAlerts([...hiddenAlerts, patient.id]);
+                                  }}
+                                  className="text-slate-300 hover:text-slate-500 hover:bg-slate-200 p-0.5 rounded-md transition-colors"
+                                  title="Dismiss alert"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
                             </div>
                             <div className="text-xs text-slate-500 flex justify-between items-center mt-1.5">
                               {(() => {
