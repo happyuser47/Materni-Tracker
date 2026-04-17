@@ -152,6 +152,44 @@ export const AppProvider = ({ children }) => {
   // Notifications Icon Resolver
   const bellAlerts = currentUser?.role === 'Admin' ? globalAlerts : myAlerts;
 
+  // --- Dismissed Alerts (localStorage, auto-resets at midnight PKT) ---
+  const getTodayPKT = () => {
+    const now = new Date();
+    const pkt = new Date(now.getTime() + (5 * 60 * 60 * 1000));
+    return pkt.toISOString().split('T')[0];
+  };
+
+  const getDismissedFromStorage = () => {
+    try {
+      const raw = localStorage.getItem('maternitrack_dismissed_alerts');
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (parsed.date === getTodayPKT()) return parsed.ids || [];
+      localStorage.removeItem('maternitrack_dismissed_alerts');
+      return [];
+    } catch { return []; }
+  };
+
+  const [dismissedAlertIds, setDismissedAlertIds] = useState(() => getDismissedFromStorage());
+
+  const saveDismissed = (ids) => {
+    setDismissedAlertIds(ids);
+    localStorage.setItem('maternitrack_dismissed_alerts', JSON.stringify({ date: getTodayPKT(), ids }));
+  };
+
+  const dismissAlert = (patientId) => {
+    if (!dismissedAlertIds.includes(patientId)) {
+      saveDismissed([...dismissedAlertIds, patientId]);
+    }
+  };
+
+  const dismissAllAlerts = () => {
+    saveDismissed([...dismissedAlertIds, ...bellAlerts.map(a => a.id)]);
+  };
+
+  const displayBellAlerts = useMemo(() => bellAlerts.filter(a => !dismissedAlertIds.includes(a.id)), [bellAlerts, dismissedAlertIds]);
+  const displayDashAlerts = useMemo(() => dashAlerts.filter(a => !dismissedAlertIds.includes(a.id)), [dashAlerts, dismissedAlertIds]);
+
   // Extract all interactions into a flat activity feed list
   const clinicActivities = useMemo(() => {
     const activities = [];
@@ -1011,7 +1049,11 @@ export const AppProvider = ({ children }) => {
     handleCopyPhone,
     handleDeletePatient,
     handleWipeAllPatients,
-    batchProgress
+    batchProgress,
+    dismissAlert,
+    dismissAllAlerts,
+    displayBellAlerts,
+    displayDashAlerts
   }), [
     isLoading, isSuperAdmin, activeTab, patients, selectedPatient, editingInteractionId, 
     isEditingDetails, isClosingCase, showAddModal, addError, importStatus, pdfImportPreview,
@@ -1025,7 +1067,7 @@ export const AppProvider = ({ children }) => {
     dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities,
     filteredPatients, filteredMyPatientsList, filteredActivities, activitySummary,
     teamPerformance, calendarYear, calendarMonth, daysInMonth, firstDayIndex,
-    batchProgress
+    batchProgress, dismissedAlertIds, displayBellAlerts, displayDashAlerts
   ]);
 
   return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;

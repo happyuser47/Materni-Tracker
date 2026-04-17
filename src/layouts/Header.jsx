@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -8,10 +8,8 @@ import { calculateDaysUntil, formatDate, getPatientAlertType } from '../utils/he
 
 
 export default function Header() {
-  const { activeTab, setActiveTab, setSelectedPatient, showNotifications, setShowNotifications, isSidebarOpen, setIsSidebarOpen, currentUser, bellAlerts, alertConfig, requestConfirm } = useApp();
+  const { activeTab, setActiveTab, setSelectedPatient, showNotifications, setShowNotifications, isSidebarOpen, setIsSidebarOpen, currentUser, alertConfig, requestConfirm, dismissAlert, dismissAllAlerts, displayBellAlerts } = useApp();
   const { logout, userFullName } = useAuth();
-  
-  const [hiddenAlerts, setHiddenAlerts] = useState([]);
 
   const handleLogout = () => {
     requestConfirm(
@@ -25,8 +23,6 @@ export default function Header() {
       }
     );
   };
-
-  const displayAlerts = bellAlerts.filter(a => !hiddenAlerts.includes(a.id));
 
   if (!currentUser) return null;
 
@@ -70,7 +66,7 @@ export default function Header() {
               className={`relative p-2 transition-colors rounded-full ${showNotifications ? 'bg-slate-100 text-slate-700' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
             >
               <BellRing className="h-5 w-5" />
-              {displayAlerts.length > 0 && (
+              {displayBellAlerts.length > 0 && (
                 <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
@@ -89,13 +85,11 @@ export default function Header() {
                   <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-slate-800">Urgent Alerts</h3>
-                      <span className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full font-medium">{displayAlerts.length}</span>
+                      <span className="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded-full font-medium">{displayBellAlerts.length}</span>
                     </div>
-                    {displayAlerts.length > 0 && (
+                    {displayBellAlerts.length > 0 && (
                       <button 
-                        onClick={() => {
-                          setHiddenAlerts([...hiddenAlerts, ...displayAlerts.map(a => a.id)]);
-                        }}
+                        onClick={() => dismissAllAlerts()}
                         className="text-xs text-slate-500 hover:text-teal-600 font-medium flex items-center transition-colors px-2 py-1 rounded-md hover:bg-teal-50"
                       >
                         <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -104,7 +98,7 @@ export default function Header() {
                     )}
                   </div>
                   <div className="max-h-[60vh] overflow-y-auto p-0">
-                    {displayAlerts.length === 0 ? (
+                    {displayBellAlerts.length === 0 ? (
                       <div className="p-8 flex flex-col items-center justify-center text-center space-y-3">
                         <div className="h-12 w-12 bg-slate-50 rounded-full flex items-center justify-center border border-slate-100">
                           <CheckCircle2 className="h-6 w-6 text-teal-400" />
@@ -116,7 +110,7 @@ export default function Header() {
                       </div>
                     ) : (
                       <ul className="divide-y divide-slate-100">
-                        {displayAlerts.map(patient => (
+                        {displayBellAlerts.map(patient => (
                           <li
                             key={patient.id}
                             className="p-4 hover:bg-slate-50 transition-colors cursor-pointer"
@@ -149,7 +143,7 @@ export default function Header() {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setHiddenAlerts([...hiddenAlerts, patient.id]);
+                                    dismissAlert(patient.id);
                                   }}
                                   className="text-slate-300 hover:text-slate-500 hover:bg-slate-200 p-0.5 rounded-md transition-colors"
                                   title="Dismiss alert"
