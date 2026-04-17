@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
@@ -172,20 +172,22 @@ export const AppProvider = ({ children }) => {
 
   const [dismissedAlertIds, setDismissedAlertIds] = useState(() => getDismissedFromStorage());
 
-  const saveDismissed = (ids) => {
-    setDismissedAlertIds(ids);
-    localStorage.setItem('maternitrack_dismissed_alerts', JSON.stringify({ date: getTodayPKT(), ids }));
-  };
+  const dismissAlert = useCallback((patientId) => {
+    setDismissedAlertIds(prev => {
+      if (prev.includes(patientId)) return prev;
+      const next = [...prev, patientId];
+      localStorage.setItem('maternitrack_dismissed_alerts', JSON.stringify({ date: getTodayPKT(), ids: next }));
+      return next;
+    });
+  }, []);
 
-  const dismissAlert = (patientId) => {
-    if (!dismissedAlertIds.includes(patientId)) {
-      saveDismissed([...dismissedAlertIds, patientId]);
-    }
-  };
-
-  const dismissAllAlerts = () => {
-    saveDismissed([...dismissedAlertIds, ...bellAlerts.map(a => a.id)]);
-  };
+  const dismissAllAlerts = useCallback(() => {
+    setDismissedAlertIds(prev => {
+      const next = Array.from(new Set([...prev, ...bellAlerts.map(a => a.id)]));
+      localStorage.setItem('maternitrack_dismissed_alerts', JSON.stringify({ date: getTodayPKT(), ids: next }));
+      return next;
+    });
+  }, [bellAlerts]);
 
   const displayBellAlerts = useMemo(() => bellAlerts.filter(a => !dismissedAlertIds.includes(a.id)), [bellAlerts, dismissedAlertIds]);
   const displayDashAlerts = useMemo(() => dashAlerts.filter(a => !dismissedAlertIds.includes(a.id)), [dashAlerts, dismissedAlertIds]);
