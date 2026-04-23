@@ -261,7 +261,7 @@ export default function MyPatients() {
                             <Badge type={patient.intent}>{patient.intent} Intent</Badge>
                           </div>
                         ) : (
-                          <Badge type={patient.status === 'Delivered (Clinic)' ? 'Success' : 'Closed'}>
+                          <Badge type={patient.status === 'Delivered (Clinic)' || patient.status === 'Delivered (MNHC)' ? 'Success' : 'Closed'}>
                             {patient.status}
                           </Badge>
                         )}

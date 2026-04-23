@@ -589,7 +589,7 @@ export default function SettingsPage() {
                 <p className="text-xs text-slate-500 mt-1">Active</p>
               </div>
               <div className="bg-teal-50/50 rounded-xl p-4 text-center border border-teal-100">
-                <p className="text-2xl font-bold text-teal-700">{patients.filter(p => p.status === 'Delivered (Clinic)').length}</p>
+                <p className="text-2xl font-bold text-teal-700">{patients.filter(p => p.status === 'Delivered (Clinic)' || p.status === 'Delivered (MNHC)').length}</p>
                 <p className="text-xs text-slate-500 mt-1">Delivered</p>
               </div>
               <div className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">

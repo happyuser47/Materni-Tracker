@@ -260,7 +260,7 @@ export default function PatientDirectory() {
                                 </div>
                               ) : (
                                 <div className="flex flex-col items-start gap-1.5">
-                                  <Badge type={patient.status === 'Delivered (Clinic)' ? 'Success' : 'Closed'}>
+                                  <Badge type={patient.status === 'Delivered (Clinic)' || patient.status === 'Delivered (MNHC)' ? 'Success' : 'Closed'}>
                                     {patient.status}
                                   </Badge>
                                   <span className="text-xs text-slate-400 whitespace-nowrap block">Case Closed</span>

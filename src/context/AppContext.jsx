@@ -126,7 +126,7 @@ export const AppProvider = ({ children }) => {
 
   // Global Clinic Data
   const globalActive = useMemo(() => patients.filter(p => p.status === 'Active'), [patients]);
-  const globalDeliveries = useMemo(() => patients.filter(p => p.status === 'Delivered (Clinic)'), [patients]);
+  const globalDeliveries = useMemo(() => patients.filter(p => p.status === 'Delivered (Clinic)' || p.status === 'Delivered (MNHC)'), [patients]);
   const globalAlerts = useMemo(() => globalActive.filter(p => isPatientOverdue(p, alertConfig)), [globalActive, alertConfig]);
   const globalUpcoming = useMemo(() => globalActive.filter(p => {
     const daysToEdd = calculateDaysUntil(p.edd);
@@ -136,7 +136,7 @@ export const AppProvider = ({ children }) => {
   // Personal Workload Data
   const myPatientsList = useMemo(() => patients.filter(p => p.assignedTo === currentUser?.name), [patients, currentUser]);
   const myActive = useMemo(() => myPatientsList.filter(p => p.status === 'Active'), [myPatientsList]);
-  const myDeliveries = useMemo(() => myPatientsList.filter(p => p.status === 'Delivered (Clinic)'), [myPatientsList]);
+  const myDeliveries = useMemo(() => myPatientsList.filter(p => p.status === 'Delivered (Clinic)' || p.status === 'Delivered (MNHC)'), [myPatientsList]);
   const myAlerts = useMemo(() => myActive.filter(p => isPatientOverdue(p, alertConfig)), [myActive, alertConfig]);
   const myUpcoming = useMemo(() => myActive.filter(p => {
     const daysToEdd = calculateDaysUntil(p.edd);

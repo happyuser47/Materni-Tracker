@@ -21,7 +21,7 @@ export function PatientCard({ patient, onClick, isAdmin }) {
           {patient.status === 'Active' ? (
             <Badge type={patient.intent}>{patient.intent} Intent</Badge>
           ) : (
-            <Badge type={patient.status === 'Delivered (Clinic)' ? 'Success' : 'Closed'}>
+            <Badge type={patient.status === 'Delivered (Clinic)' || patient.status === 'Delivered (MNHC)' ? 'Success' : 'Closed'}>
               {patient.status}
             </Badge>
           )}

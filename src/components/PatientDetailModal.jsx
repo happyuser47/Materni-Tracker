@@ -47,7 +47,7 @@ export default function PatientDetailModal() {
                   {selectedPatient.status === 'Active' ? (
                      <Badge type={selectedPatient.intent}>{selectedPatient.intent} Intent</Badge>
                   ) : (
-                     <Badge type={selectedPatient.status === 'Delivered (Clinic)' ? 'Success' : 'Closed'}>
+                     <Badge type={selectedPatient.status === 'Delivered (Clinic)' || selectedPatient.status === 'Delivered (MNHC)' ? 'Success' : 'Closed'}>
                        {selectedPatient.status}
                      </Badge>
                   )}
