@@ -132,7 +132,9 @@ export default function Header() {
                               <div className="flex items-center gap-1.5 shrink-0">
                                 {(() => {
                                   const alertType = getPatientAlertType(patient, alertConfig);
-                                  if (alertType === 'Delivery Due') {
+                                  if (alertType === 'Delivery Overdue') {
+                                    return <span className="text-[10px] uppercase font-bold bg-red-50 text-red-600 px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap">Delivery Overdue</span>;
+                                  } else if (alertType === 'Delivery Due') {
                                     return <span className="text-[10px] uppercase font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 whitespace-nowrap">Delivery Due</span>;
                                   } else if (alertType === 'Follow-up Due') {
                                     return <span className="text-[10px] uppercase font-bold bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded border border-orange-100 whitespace-nowrap">Follow-up Due</span>;
@@ -155,7 +157,15 @@ export default function Header() {
                             <div className="text-xs text-slate-500 flex justify-between items-center mt-1.5">
                               {(() => {
                                 const alertType = getPatientAlertType(patient, alertConfig);
-                                if (alertType === 'Follow-up Due') {
+                                if (alertType === 'Delivery Overdue') {
+                                  return (
+                                    <span>
+                                      <span className="font-medium text-red-600">{Math.abs(calculateDaysUntil(patient.edd))} days overdue</span>
+                                      <span className="text-slate-400 mx-1.5">•</span>
+                                      EDD: {formatDate(patient.edd)}
+                                    </span>
+                                  );
+                                } else if (alertType === 'Follow-up Due') {
                                   return (
                                     <span>
                                       <span className="font-medium text-orange-600">Follow-up: {formatDate(patient.nextInteractionDate)}</span>

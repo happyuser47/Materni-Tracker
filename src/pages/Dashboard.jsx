@@ -122,6 +122,7 @@ export default function Dashboard() {
                         <div className="shrink-0">
                           {(() => {
                             const alertType = getPatientAlertType(patient, alertConfig);
+                            if (alertType === 'Delivery Overdue') return <Badge type="Urgent">Delivery Overdue</Badge>;
                             if (alertType === 'Delivery Due') return <Badge type="Delivery">Delivery Due</Badge>;
                             if (alertType === 'Follow-up Due') return <Badge type="Alert">Follow-up Due</Badge>;
                             return <Badge type="Urgent">Contact Overdue</Badge>;
@@ -131,7 +132,15 @@ export default function Dashboard() {
                       <div className="text-sm text-slate-500 flex items-center justify-between mt-1.5">
                         {(() => {
                           const alertType = getPatientAlertType(patient, alertConfig);
-                          if (alertType === 'Follow-up Due') {
+                          if (alertType === 'Delivery Overdue') {
+                            return (
+                              <span>
+                                <span className="font-medium text-red-600">{Math.abs(calculateDaysUntil(patient.edd))} days overdue</span>
+                                <span className="text-slate-400 mx-2">•</span>
+                                EDD: {formatDate(patient.edd)}
+                              </span>
+                            );
+                          } else if (alertType === 'Follow-up Due') {
                             return (
                               <span>
                                 <span className="font-medium text-orange-600">Follow-up: {formatDate(patient.nextInteractionDate)}</span>

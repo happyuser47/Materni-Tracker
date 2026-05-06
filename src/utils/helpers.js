@@ -41,39 +41,51 @@ export const formatPhone = (value) => {
   return v;
 };
 
+// --- Alert System Thresholds ---
+// Patients whose EDD passed beyond this grace period need case closure, not alerts.
+const PAST_EDD_GRACE_DAYS = 14;
+
 export const isPatientOverdue = (patient, alertConfig) => {
   if (!patient.edd || patient.status !== 'Active') return false;
-  
-  const daysToEdd = calculateDaysUntil(patient.edd);
-  
-  // 1. Delivery Due Proximity (Highest priority alert)
-  const isNearDelivery = daysToEdd >= 0 && daysToEdd <= (alertConfig?.eddProximity || 30);
-  if (isNearDelivery) return true;
 
-  // 2. Explicit Next Interaction Date Overdue
+  const daysToEdd = calculateDaysUntil(patient.edd);
+
+  // Hard cutoff: EDD passed beyond grace period → needs case closure, not alerts
+  if (daysToEdd < -PAST_EDD_GRACE_DAYS) return false;
+
+  // 1. Delivery Overdue — EDD has passed but within grace window (most urgent)
+  if (daysToEdd < 0) return true;
+
+  // 2. Delivery Due — EDD approaching within configured proximity window
+  if (daysToEdd <= (alertConfig?.eddProximity || 30)) return true;
+
+  // 3. Scheduled follow-up is due today or overdue (only recent, staff-set dates)
   if (patient.nextInteractionDate) {
     const daysToNext = calculateDaysUntil(patient.nextInteractionDate);
-    if (daysToNext <= 0) return true;
+    if (daysToNext <= 0 && daysToNext >= -(alertConfig?.contactGap || 14)) return true;
   }
-  
-  // 3. Fallback: Overdue based on last contact gap
-  const daysSinceContact = calculateDaysUntil(patient.lastContact) * -1;
-  const isOverdueContact = daysSinceContact > (alertConfig?.contactGap || 14);
-  
-  return isOverdueContact;
+
+  // No generic contact gap fallback — avoids flooding with bulk-imported records
+  return false;
 };
 
 export const getPatientAlertType = (patient, alertConfig) => {
   if (!patient.edd || patient.status !== 'Active') return null;
   const daysToEdd = calculateDaysUntil(patient.edd);
+
+  // Past EDD within grace → most critical
+  if (daysToEdd < 0 && daysToEdd >= -PAST_EDD_GRACE_DAYS) return 'Delivery Overdue';
+
+  // Upcoming delivery within proximity
   if (daysToEdd >= 0 && daysToEdd <= (alertConfig?.eddProximity || 30)) return 'Delivery Due';
-  
+
+  // Scheduled follow-up overdue (recent, staff-set)
   if (patient.nextInteractionDate) {
     const daysToNext = calculateDaysUntil(patient.nextInteractionDate);
-    if (daysToNext <= 0) return 'Follow-up Due';
+    if (daysToNext <= 0 && daysToNext >= -(alertConfig?.contactGap || 14)) return 'Follow-up Due';
   }
-  
-  return 'Contact Overdue';
+
+  return null;
 };
 
 // CSV Helper Functions

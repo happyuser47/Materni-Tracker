@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useMemo, useEffect, useRef,
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
-import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone, isPatientOverdue, generateCSVTemplate, exportDataToCSV } from '../utils/helpers';
+import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone, isPatientOverdue, getPatientAlertType, generateCSVTemplate, exportDataToCSV } from '../utils/helpers';
 import { extractTextFromPDF, parsePdfPatientsForImport } from '../lib/pdfParser';
 
 const AppContext = createContext();
@@ -127,7 +127,17 @@ export const AppProvider = ({ children }) => {
   // Global Clinic Data
   const globalActive = useMemo(() => patients.filter(p => p.status === 'Active'), [patients]);
   const globalDeliveries = useMemo(() => patients.filter(p => p.status === 'Delivered (Clinic)' || p.status === 'Delivered (MNHC)'), [patients]);
-  const globalAlerts = useMemo(() => globalActive.filter(p => isPatientOverdue(p, alertConfig)), [globalActive, alertConfig]);
+  const globalAlerts = useMemo(() => {
+    const priorityOrder = { 'Delivery Overdue': 0, 'Delivery Due': 1, 'Follow-up Due': 2, 'Contact Overdue': 3 };
+    return globalActive
+      .filter(p => isPatientOverdue(p, alertConfig))
+      .sort((a, b) => {
+        const aP = priorityOrder[getPatientAlertType(a, alertConfig)] ?? 4;
+        const bP = priorityOrder[getPatientAlertType(b, alertConfig)] ?? 4;
+        if (aP !== bP) return aP - bP;
+        return new Date(a.edd) - new Date(b.edd);
+      });
+  }, [globalActive, alertConfig]);
   const globalUpcoming = useMemo(() => globalActive.filter(p => {
     const daysToEdd = calculateDaysUntil(p.edd);
     return daysToEdd >= 0 && daysToEdd <= 30;
@@ -137,7 +147,17 @@ export const AppProvider = ({ children }) => {
   const myPatientsList = useMemo(() => patients.filter(p => p.assignedTo === currentUser?.name), [patients, currentUser]);
   const myActive = useMemo(() => myPatientsList.filter(p => p.status === 'Active'), [myPatientsList]);
   const myDeliveries = useMemo(() => myPatientsList.filter(p => p.status === 'Delivered (Clinic)' || p.status === 'Delivered (MNHC)'), [myPatientsList]);
-  const myAlerts = useMemo(() => myActive.filter(p => isPatientOverdue(p, alertConfig)), [myActive, alertConfig]);
+  const myAlerts = useMemo(() => {
+    const priorityOrder = { 'Delivery Overdue': 0, 'Delivery Due': 1, 'Follow-up Due': 2, 'Contact Overdue': 3 };
+    return myActive
+      .filter(p => isPatientOverdue(p, alertConfig))
+      .sort((a, b) => {
+        const aP = priorityOrder[getPatientAlertType(a, alertConfig)] ?? 4;
+        const bP = priorityOrder[getPatientAlertType(b, alertConfig)] ?? 4;
+        if (aP !== bP) return aP - bP;
+        return new Date(a.edd) - new Date(b.edd);
+      });
+  }, [myActive, alertConfig]);
   const myUpcoming = useMemo(() => myActive.filter(p => {
     const daysToEdd = calculateDaysUntil(p.edd);
     return daysToEdd >= 0 && daysToEdd <= 30;
@@ -190,7 +210,8 @@ export const AppProvider = ({ children }) => {
   }, [bellAlerts]);
 
   const displayBellAlerts = useMemo(() => bellAlerts.filter(a => !dismissedAlertIds.includes(a.id)), [bellAlerts, dismissedAlertIds]);
-  const displayDashAlerts = useMemo(() => dashAlerts.filter(a => !dismissedAlertIds.includes(a.id)), [dashAlerts, dismissedAlertIds]);
+  // Dashboard always shows the full clinical picture — bell dismissals don't affect it
+  const displayDashAlerts = useMemo(() => dashAlerts, [dashAlerts]);
 
   // Extract all interactions into a flat activity feed list
   const clinicActivities = useMemo(() => {
