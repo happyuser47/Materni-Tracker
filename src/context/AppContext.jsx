@@ -679,7 +679,7 @@ export const AppProvider = ({ children }) => {
       }
 
       if (toUpsert.length > 0) {
-        const { data, error } = await supabase.from('patients').upsert(toUpsert, { onConflict: 'cnic' }).select();
+        const { data, error } = await supabase.from('patients').upsert(toUpsert, { onConflict: 'cnic', ignoreDuplicates: true }).select();
         if (!error) successCount += (data?.length || 0);
         else errorCount += toUpsert.length;
       }
@@ -773,7 +773,7 @@ export const AppProvider = ({ children }) => {
         setBatchProgress(null);
         setPdfImportPreview({ rows: dataRows, mapping: m, formatLabel, fileName: file.name });
         setImportStatus(
-          `info: Parsed ${dataRows.length} row(s) from ${formatLabel}. Review the preview and click Confirm import. Existing CNICs will be updated (upsert), not duplicated.`
+          `info: Parsed ${dataRows.length} row(s) from ${formatLabel}. Review the preview and click Confirm import. Existing CNICs will be skipped, keeping previous records as they are.`
         );
         if (fileInputRef.current) fileInputRef.current.value = '';
       } catch (err) {
