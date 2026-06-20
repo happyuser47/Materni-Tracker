@@ -45,44 +45,69 @@ export default function MyPatients() {
         {/* Admin-Only Stat Cards for Personal Workload */}
         {currentUser?.role === 'Admin' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
-            <div className="bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-500 mb-1 truncate" title="Active Pregnancies">Active Pregnancies</p>
-                <h3 className="text-2xl sm:text-3xl font-bold text-slate-800">{myActive.length}</h3>
-              </div>
-              <div className="p-2.5 sm:p-3 bg-teal-50 rounded-xl text-teal-600 shrink-0">
-                <Users className="h-5 w-5 sm:h-6 sm:w-6" />
-              </div>
-            </div>
-
-            <div className="bg-white p-4 lg:p-5 rounded-2xl border border-teal-200 shadow-sm flex items-start justify-between gap-3 bg-teal-50/30">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-teal-700 mb-1 truncate" title="Clinic Deliveries">Clinic Deliveries</p>
-                <h3 className="text-2xl sm:text-3xl font-bold text-teal-900">{myDeliveries.length}</h3>
-              </div>
-              <div className="p-2.5 sm:p-3 bg-teal-100 rounded-xl text-teal-700 shrink-0">
-                <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
+            {/* Active Pregnancies */}
+            <div className="group relative overflow-hidden p-6 px-8 rounded-full border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 ease-in-out bg-white/40 backdrop-blur-xl">
+              <div className="absolute -left-10 -top-10 w-32 h-32 bg-blue-400/30 rounded-full mix-blend-multiply blur-2xl group-hover:bg-blue-400/40 transition-colors duration-500"></div>
+              <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-cyan-400/30 rounded-full mix-blend-multiply blur-2xl group-hover:bg-cyan-400/40 transition-colors duration-500"></div>
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="pr-2">
+                  <p className="text-sm font-medium text-slate-600 mb-1">Active Pregnancies</p>
+                  <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{myActive.length}</h3>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-white/60 text-blue-600 flex items-center justify-center ring-1 ring-white/80 shadow-sm shrink-0 xl:-mr-2 backdrop-blur-md">
+                  <Users className="h-6 w-6" />
+                </div>
               </div>
             </div>
 
-            <div className="bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-500 truncate" title="Upcoming Deliveries">Upcoming Deliveries</p>
-                <p className="text-[10px] sm:text-xs text-slate-400 mb-1 truncate">(Next 30 Days)</p>
-                <h3 className="text-2xl sm:text-3xl font-bold text-slate-800">{myUpcoming.length}</h3>
-              </div>
-              <div className="p-2.5 sm:p-3 bg-emerald-50 rounded-xl text-emerald-600 shrink-0">
-                <CalendarHeart className="h-5 w-5 sm:h-6 sm:w-6" />
+            {/* Clinic Deliveries */}
+            <div className="group relative overflow-hidden p-6 px-8 rounded-full border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 ease-in-out bg-white/40 backdrop-blur-xl">
+              <div className="absolute -left-10 -top-10 w-32 h-32 bg-emerald-400/30 rounded-full mix-blend-multiply blur-2xl group-hover:bg-emerald-400/40 transition-colors duration-500"></div>
+              <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-teal-400/30 rounded-full mix-blend-multiply blur-2xl group-hover:bg-teal-400/40 transition-colors duration-500"></div>
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="pr-2">
+                  <p className="text-sm font-medium text-slate-600 mb-1">Clinic Deliveries</p>
+                  <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{myDeliveries.length}</h3>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-white/60 text-emerald-600 flex items-center justify-center ring-1 ring-white/80 shadow-sm shrink-0 xl:-mr-2 backdrop-blur-md">
+                  <CheckCircle2 className="h-6 w-6" />
+                </div>
               </div>
             </div>
 
-            <div className="bg-white p-4 lg:p-5 rounded-2xl border border-slate-200 shadow-sm flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-500 mb-1 truncate" title="Needs Urgent Follow-up">Needs Urgent Follow-up</p>
-                <h3 className="text-2xl sm:text-3xl font-bold text-red-600">{myAlerts.length}</h3>
+            {/* Upcoming Deliveries */}
+            <div className="group relative overflow-hidden p-6 px-8 rounded-full border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 ease-in-out bg-white/40 backdrop-blur-xl">
+              <div className="absolute -left-10 -top-10 w-32 h-32 bg-violet-400/30 rounded-full mix-blend-multiply blur-2xl group-hover:bg-violet-400/40 transition-colors duration-500"></div>
+              <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-fuchsia-400/30 rounded-full mix-blend-multiply blur-2xl group-hover:bg-fuchsia-400/40 transition-colors duration-500"></div>
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="pr-2">
+                  <p className="text-sm font-medium text-slate-600 mb-1">Upcoming Deliveries</p>
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-3xl font-bold text-slate-800 tracking-tight">{myUpcoming.length}</h3>
+                    <span className="text-[10px] font-semibold text-violet-700 bg-white/60 backdrop-blur-md ring-1 ring-white/80 shadow-sm px-2 py-0.5 rounded-full shrink-0">30 Days</span>
+                  </div>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-white/60 text-violet-600 flex items-center justify-center ring-1 ring-white/80 shadow-sm shrink-0 xl:-mr-2 backdrop-blur-md">
+                  <CalendarHeart className="h-6 w-6" />
+                </div>
               </div>
-              <div className="p-2.5 sm:p-3 bg-red-50 rounded-xl text-red-600 shrink-0">
-                <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+
+            {/* Urgent Follow-up */}
+            <div className="group relative overflow-hidden p-6 px-8 rounded-full border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 ease-in-out bg-white/40 backdrop-blur-xl">
+              <div className="absolute -left-10 -top-10 w-32 h-32 bg-rose-400/30 rounded-full mix-blend-multiply blur-2xl group-hover:bg-rose-400/40 transition-colors duration-500"></div>
+              <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-orange-400/30 rounded-full mix-blend-multiply blur-2xl group-hover:bg-orange-400/40 transition-colors duration-500"></div>
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="pr-2">
+                  <p className="text-sm font-medium text-slate-600 mb-1">Urgent Follow-up</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-3xl font-bold text-rose-600 tracking-tight">{myAlerts.length}</h3>
+                    {myAlerts.length > 0 && <span className="flex h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse shrink-0"></span>}
+                  </div>
+                </div>
+                <div className="h-12 w-12 rounded-full bg-white/60 text-rose-600 flex items-center justify-center ring-1 ring-white/80 shadow-sm shrink-0 xl:-mr-2 backdrop-blur-md">
+                  <AlertCircle className="h-6 w-6" />
+                </div>
               </div>
             </div>
           </div>
