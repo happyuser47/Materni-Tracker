@@ -918,6 +918,32 @@ export const AppProvider = ({ children }) => {
     document.body.removeChild(textArea);
   };
 
+  const handleCopyPatientDetail = (patient) => {
+    const details = `Name: ${patient.name}
+CNIC: ${patient.id}
+Reg Date: ${new Date(patient.registrationDate).toLocaleDateString()}
+EDD: ${patient.edd}
+Location: ${patient.area}
+Caste: ${patient.caste}
+Reference: ${patient.reference}
+Phone: ${patient.phone}
+Intent: ${patient.intent}
+Status: ${patient.status}`;
+
+    const textArea = document.createElement("textarea");
+    textArea.value = details;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      setToastMessage({ type: 'success', text: 'Patient details copied to clipboard!' });
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
+    document.body.removeChild(textArea);
+  };
+
   const handleDeletePatient = (id) => {
     const patient = patients.find(p => p.id === id);
     requestConfirm(
@@ -1070,6 +1096,7 @@ export const AppProvider = ({ children }) => {
     handleAddStaff,
     handleDeleteStaff,
     handleCopyPhone,
+    handleCopyPatientDetail,
     handleDeletePatient,
     handleWipeAllPatients,
     batchProgress,
