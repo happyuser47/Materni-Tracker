@@ -13,6 +13,108 @@ import { OUTCOMES } from '../lib/constants';
 import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone } from '../utils/helpers';
 
 
+function SearchableSelect({
+  name,
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+  required = false,
+  className = '',
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) setQuery('');
+  }, [isOpen]);
+
+  const filteredOptions = useMemo(() => {
+    const searchTerm = query.trim().toLowerCase();
+    if (!searchTerm) return options;
+    return options.filter((option) => option.label.toLowerCase().includes(searchTerm));
+  }, [options, query]);
+
+  const selectedOption = options.find((option) => option.value === value);
+
+  return (
+    <div ref={containerRef} className={className}>
+      {label && <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>}
+      <div className="relative">
+        <input
+          type="text"
+          name={name}
+          value={selectedOption ? selectedOption.label : ''}
+          onFocus={() => setIsOpen(true)}
+          onClick={() => setIsOpen(true)}
+          readOnly
+          required={required}
+          placeholder={placeholder}
+          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-teal-500 outline-none bg-white shadow-sm cursor-pointer pr-10 placeholder:text-slate-400"
+        />
+        <ChevronDown className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+
+        {isOpen && (
+          <div className="absolute z-30 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
+            <div className="p-2 border-b border-slate-100 bg-slate-50/80">
+              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 focus-within:ring-2 focus-within:ring-teal-500">
+                <Search className="h-4 w-4 text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={`Search ${label.toLowerCase()}...`}
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="max-h-56 overflow-y-auto py-1">
+              {filteredOptions.length === 0 ? (
+                <div className="px-3 py-6 text-center text-sm text-slate-500">No matches found</div>
+              ) : (
+                filteredOptions.map((option) => {
+                  const isSelected = option.value === value;
+
+                  return (
+                    <button
+                      key={option.value || option.label}
+                      type="button"
+                      onClick={() => {
+                        onChange(option.value);
+                        setIsOpen(false);
+                      }}
+                      className={`w-full px-3 py-2.5 text-left text-sm transition-colors flex items-center justify-between gap-3 ${isSelected ? 'bg-teal-50 text-teal-700' : 'text-slate-700 hover:bg-slate-50'}`}
+                    >
+                      <span className="truncate">{option.label}</span>
+                      {isSelected && <Check className="h-4 w-4 shrink-0 text-teal-600" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 export default function AddPatientModal() {
   const { handleModifyList, activeTab, setActiveTab, patients, setPatients, selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, showAddModal, setShowAddModal, addError, setAddError, importStatus, setImportStatus, showNotifications, setShowNotifications, showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, toastMessage, setToastMessage, confirmDialog, setConfirmDialog, requestConfirm, closeConfirm, calendarDate, setCalendarDate, areas, setAreas, castes, setCastes, references, setReferences, staffMembers, setStaffMembers, alertConfig, setAlertConfig, currentUser, setCurrentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent, filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference, filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming, myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities, filteredPatients, filteredMyPatientsList, filteredActivities, activitySummary, teamPerformance, calendarYear, calendarMonth, daysInMonth, firstDayIndex, getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, handleAddInteraction, handleCloseCase, handleReopenCase, handleUpdateInteraction, handleFileUpload, handleAddStaff, handleDeleteStaff, handleCopyPhone, handleDeletePatient } = useApp();
   
@@ -23,6 +125,25 @@ export default function AddPatientModal() {
   const [newCaste, setNewCaste] = useState('');
   const [addingRef, setAddingRef] = useState(false);
   const [newRef, setNewRef] = useState('');
+  const [selectedArea, setSelectedArea] = useState('');
+  const [selectedCaste, setSelectedCaste] = useState('');
+  const [selectedReference, setSelectedReference] = useState('');
+  const [selectedAssignedTo, setSelectedAssignedTo] = useState('Unassigned');
+
+  useEffect(() => {
+    if (!showAddModal) {
+      setAddingArea(false);
+      setNewArea('');
+      setAddingCaste(false);
+      setNewCaste('');
+      setAddingRef(false);
+      setNewRef('');
+      setSelectedArea('');
+      setSelectedCaste('');
+      setSelectedReference('');
+      setSelectedAssignedTo('Unassigned');
+    }
+  }, [showAddModal]);
 
   if (['PatientDetailModal', 'AddPatientModal', 'ConfirmModal', 'Toast'].includes('AddPatientModal')) {
      let isVisible = false;
@@ -90,7 +211,7 @@ export default function AddPatientModal() {
                     className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none" 
                   />
                 </div>
-                <div className="col-span-2 sm:col-span-1">
+                <div className="col-span-2 sm:col-span-1 space-y-2">
                   <div className="flex justify-between items-end mb-1">
                     <label className="block text-sm font-medium text-slate-700">Area / Location *</label>
                     {!addingArea ? (
@@ -146,14 +267,19 @@ export default function AddPatientModal() {
                       className="w-full border border-teal-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-teal-50/30"
                     />
                   ) : (
-                    <select name="area" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
-                      <option value="">Select Area...</option>
-                      {areas.map(area => <option key={area.id} value={area.value}>{area.value}</option>)}
-                    </select>
+                    <SearchableSelect
+                      name="area"
+                      label=""
+                      value={selectedArea}
+                      onChange={setSelectedArea}
+                      options={areas.map((area) => ({ value: area.value, label: area.value }))}
+                      placeholder="Search area..."
+                      required
+                    />
                   )}
                 </div>
 
-                <div className="col-span-2 sm:col-span-1">
+                <div className="col-span-2 sm:col-span-1 space-y-2">
                   <div className="flex justify-between items-end mb-1">
                     <label className="block text-sm font-medium text-slate-700">Caste *</label>
                     {!addingCaste ? (
@@ -209,14 +335,19 @@ export default function AddPatientModal() {
                       className="w-full border border-teal-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-teal-50/30"
                     />
                   ) : (
-                    <select name="caste" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
-                      <option value="">Select Caste...</option>
-                      {castes.map(caste => <option key={caste.id} value={caste.value}>{caste.value}</option>)}
-                    </select>
+                    <SearchableSelect
+                      name="caste"
+                      label=""
+                      value={selectedCaste}
+                      onChange={setSelectedCaste}
+                      options={castes.map((caste) => ({ value: caste.value, label: caste.value }))}
+                      placeholder="Search caste..."
+                      required
+                    />
                   )}
                 </div>
 
-                <div className="col-span-2 sm:col-span-1">
+                <div className="col-span-2 sm:col-span-1 space-y-2">
                   <div className="flex justify-between items-end mb-1">
                     <label className="block text-sm font-medium text-slate-700">Reference *</label>
                     {!addingRef ? (
@@ -272,10 +403,15 @@ export default function AddPatientModal() {
                       className="w-full border border-teal-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-teal-50/30"
                     />
                   ) : (
-                    <select name="reference" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
-                      <option value="">Select Reference...</option>
-                      {references.map(ref => <option key={ref.id} value={ref.value}>{ref.value}</option>)}
-                    </select>
+                    <SearchableSelect
+                      name="reference"
+                      label=""
+                      value={selectedReference}
+                      onChange={setSelectedReference}
+                      options={references.map((ref) => ({ value: ref.value, label: ref.value }))}
+                      placeholder="Search reference..."
+                      required
+                    />
                   )}
                 </div>
                 <div className="col-span-2 sm:col-span-1">
@@ -286,11 +422,18 @@ export default function AddPatientModal() {
                   <>
                     {/* Assign to Staff */}
                     <div className="col-span-2 sm:col-span-1">
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Assign to Staff *</label>
-                      <select name="assignedTo" defaultValue="Unassigned" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none bg-white">
-                        <option value="Unassigned">Unassigned</option>
-                        {staffNames.map(staff => <option key={staff} value={staff}>{staff}</option>)}
-                      </select>
+                      <SearchableSelect
+                        name="assignedTo"
+                        label="Assign to Staff *"
+                        value={selectedAssignedTo}
+                        onChange={setSelectedAssignedTo}
+                        options={[
+                          { value: 'Unassigned', label: 'Unassigned' },
+                          ...staffNames.map((staff) => ({ value: staff, label: staff })),
+                        ]}
+                        placeholder="Search staff..."
+                        required
+                      />
                     </div>
                     {/* Assignment Type */}
                     <div className="col-span-2 sm:col-span-1">

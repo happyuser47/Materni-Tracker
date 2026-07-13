@@ -442,6 +442,15 @@ export const AppProvider = ({ children }) => {
     const formData = new FormData(e.target);
     const cnic = formData.get('cnic');
     const name = formData.get('name');
+    const area = formData.get('area');
+    const caste = formData.get('caste');
+    const reference = formData.get('reference');
+    const assignedTo = formData.get('assignedTo');
+
+    if (!area || !caste || !reference || (currentUser?.role === 'Admin' && !assignedTo)) {
+      setAddError('Please select Area, Caste, Reference, and Staff before registering.');
+      return;
+    }
 
     if (patients.some(p => p.id === cnic)) {
       setAddError('A patient with this CNIC already exists in the system!');
