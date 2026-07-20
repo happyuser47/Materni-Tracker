@@ -1,1 +1,160 @@
 @import "tailwindcss";
+
+@layer base {
+	.premium-btn {
+		position: relative;
+		isolation: isolate;
+		overflow: hidden;
+		border: 0;
+		border-radius: 9999px;
+		background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
+		color: #ffffff;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.55rem;
+		padding: 0.85rem 1.35rem;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		box-shadow:
+			0 14px 30px rgba(2, 6, 23, 0.18),
+			0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+		transition:
+			transform 180ms ease,
+			box-shadow 180ms ease,
+			filter 180ms ease;
+	}
+
+	.premium-btn::before {
+		content: '';
+		position: absolute;
+		inset: -2px;
+		border-radius: inherit;
+		background: linear-gradient(-45deg, #22c55e 0%, #06b6d4 35%, #8b5cf6 70%, #f43f5e 100%);
+		z-index: -2;
+		pointer-events: none;
+		transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	}
+
+	.premium-btn::after {
+		content: '';
+		position: absolute;
+		inset: 1px;
+		border-radius: inherit;
+		background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.92));
+		z-index: -1;
+		pointer-events: none;
+		transition: filter 180ms ease, opacity 180ms ease;
+	}
+
+	.premium-btn > * {
+		position: relative;
+		z-index: 1;
+	}
+
+	.premium-btn:hover {
+		transform: translateY(-1px);
+		box-shadow:
+			0 18px 36px rgba(2, 6, 23, 0.22),
+			0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+	}
+
+	.premium-btn:hover::before {
+		transform: rotate(-180deg) scale(1.02);
+	}
+
+	.premium-btn:hover::after {
+		filter: brightness(1.06);
+	}
+
+	.premium-btn:active {
+		transform: translateY(0) scale(0.98);
+	}
+
+	.premium-btn:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+		transform: none;
+	}
+
+	.premium-btn-soft {
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(241, 245, 249, 0.95));
+		color: #0f172a;
+		box-shadow:
+			0 12px 24px rgba(15, 23, 42, 0.08),
+			0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+	}
+
+	.premium-btn-soft::after {
+		background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(226, 232, 240, 0.9));
+	}
+
+	.premium-btn-danger::before {
+		background: linear-gradient(-45deg, #fb7185 0%, #ef4444 35%, #f97316 70%, #f43f5e 100%);
+	}
+
+	.premium-btn-danger::after {
+		background: linear-gradient(180deg, rgba(127, 29, 29, 0.98), rgba(69, 10, 10, 0.96));
+	}
+}
+
+/* Custom premium animations for 00Kubi Uiverse Button */
+@keyframes gradient-move {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-move 4s ease infinite;
+}
+
+@keyframes wave-effect {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.wave {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: translateX(-100%) rotate(45deg);
+  transition: all 0.6s ease;
+  pointer-events: none;
+}
+
+.group:hover .wave {
+  animation: wave-effect 1.5s ease-in-out infinite;
+}
+
+.glitter-container {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.group:hover .glitter-container {
+  opacity: 1;
+}
+
+.glitter {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 8px white;
+  animation: glitter-flash 1.5s infinite ease-in-out;
+}
+
+.glitter:nth-child(1) { top: 20%; left: 30%; animation-delay: 0.1s; }
+.glitter:nth-child(2) { top: 60%; left: 75%; animation-delay: 0.4s; }
+.glitter:nth-child(3) { top: 40%; left: 50%; animation-delay: 0.7s; }
+
+@keyframes glitter-flash {
+  0%, 100% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.5); opacity: 1; }
+}

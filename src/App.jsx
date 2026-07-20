@@ -82,7 +82,7 @@ const AppContent = () => {
       )}
       <Toast />
       <Sidebar />
-      <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden relative">
+      <main className="flex-1 min-w-0 flex flex-col h-screen overflow-hidden relative bg-slate-50/50" style={{ boxShadow: 'inset 6px 0 12px -6px rgba(15,23,42,0.04)' }}>
         <Header />
         <div className="flex-1 overflow-auto p-4 md:p-8">
           <div className={activeTab === 'dashboard' ? 'block' : 'hidden'}><Dashboard /></div>

@@ -37,15 +37,13 @@ export default function ConfirmModal() {
         <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
           <button 
             onClick={closeConfirm} 
-            className="px-5 py-2.5 text-slate-600 text-sm font-bold hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+            className="premium-btn-soft px-5 py-2.5 text-sm font-bold"
           >
             Cancel
           </button>
           <button 
             onClick={() => { confirmDialog.onConfirm(); closeConfirm(); }} 
-            className={`px-6 py-2.5 text-white text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95 ${
-              isDestructive ? 'bg-red-600 hover:bg-red-700 shadow-red-100' : 'bg-teal-600 hover:bg-teal-700 shadow-teal-100'
-            }`}
+            className={`premium-btn px-6 py-2.5 text-sm font-bold ${isDestructive ? 'premium-btn-danger' : ''}`}
           >
             {isDestructive ? 'Confirm' : 'Yes, Proceed'}
           </button>

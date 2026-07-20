@@ -11,6 +11,7 @@ import { Badge } from '../components/Badge';
 import { ManageListCard } from '../components/ManageListCard';
 import { OUTCOMES } from '../lib/constants';
 import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone } from '../utils/helpers';
+import SearchableSelect from './SearchableSelect';
 
 
 export default function PatientDetailModal() {
@@ -23,6 +24,21 @@ export default function PatientDetailModal() {
   const [newCaste, setNewCaste] = useState('');
   const [addingRef, setAddingRef] = useState(false);
   const [newRef, setNewRef] = useState('');
+
+  // Controlled edit states for searchable selectors
+  const [editArea, setEditArea] = useState('');
+  const [editCaste, setEditCaste] = useState('');
+  const [editRef, setEditRef] = useState('');
+  const [editAssignedTo, setEditAssignedTo] = useState('Unassigned');
+
+  useEffect(() => {
+    if (selectedPatient) {
+      setEditArea(selectedPatient.area || '');
+      setEditCaste(selectedPatient.caste || '');
+      setEditRef(selectedPatient.reference || '');
+      setEditAssignedTo(selectedPatient.assignedTo || 'Unassigned');
+    }
+  }, [selectedPatient, isEditingDetails]);
 
   if (['PatientDetailModal', 'AddPatientModal', 'ConfirmModal', 'Toast'].includes('PatientDetailModal')) {
      let isVisible = false;
@@ -146,8 +162,10 @@ export default function PatientDetailModal() {
                             <button 
                               type="button" 
                               onClick={() => {
-                                if (newArea.trim()) {
-                                  handleModifyList('area', 'add', newArea.trim());
+                                const trimmed = newArea.trim();
+                                if (trimmed) {
+                                  handleModifyList('area', 'add', trimmed);
+                                  setEditArea(trimmed);
                                   setNewArea('');
                                   setAddingArea(false);
                                 }
@@ -176,8 +194,10 @@ export default function PatientDetailModal() {
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
-                              if (newArea.trim()) {
-                                handleModifyList('area', 'add', newArea.trim());
+                              const trimmed = newArea.trim();
+                              if (trimmed) {
+                                handleModifyList('area', 'add', trimmed);
+                                setEditArea(trimmed);
                                 setNewArea('');
                                 setAddingArea(false);
                               }
@@ -186,9 +206,15 @@ export default function PatientDetailModal() {
                           className="w-full text-sm border border-teal-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-teal-50/30"
                         />
                       ) : (
-                        <select name="area" defaultValue={selectedPatient.area} className="w-full text-sm border border-slate-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm" required>
-                          {areas.map(area => <option key={area.id} value={area.value}>{area.value}</option>)}
-                        </select>
+                        <SearchableSelect
+                          name="area"
+                          value={editArea}
+                          onChange={setEditArea}
+                          options={areas.map(area => ({ value: area.value, label: area.value }))}
+                          placeholder="Search area..."
+                          required
+                          className="w-full"
+                        />
                       )}
                     </div>
 
@@ -208,8 +234,10 @@ export default function PatientDetailModal() {
                             <button 
                               type="button" 
                               onClick={() => {
-                                if (newCaste.trim()) {
-                                  handleModifyList('caste', 'add', newCaste.trim());
+                                const trimmed = newCaste.trim();
+                                if (trimmed) {
+                                  handleModifyList('caste', 'add', trimmed);
+                                  setEditCaste(trimmed);
                                   setNewCaste('');
                                   setAddingCaste(false);
                                 }
@@ -238,8 +266,10 @@ export default function PatientDetailModal() {
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
-                              if (newCaste.trim()) {
-                                handleModifyList('caste', 'add', newCaste.trim());
+                              const trimmed = newCaste.trim();
+                              if (trimmed) {
+                                handleModifyList('caste', 'add', trimmed);
+                                setEditCaste(trimmed);
                                 setNewCaste('');
                                 setAddingCaste(false);
                               }
@@ -248,9 +278,15 @@ export default function PatientDetailModal() {
                           className="w-full text-sm border border-teal-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-teal-50/30"
                         />
                       ) : (
-                        <select name="caste" defaultValue={selectedPatient.caste} className="w-full text-sm border border-slate-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm" required>
-                          {castes.map(caste => <option key={caste.id} value={caste.value}>{caste.value}</option>)}
-                        </select>
+                        <SearchableSelect
+                          name="caste"
+                          value={editCaste}
+                          onChange={setEditCaste}
+                          options={castes.map(caste => ({ value: caste.value, label: caste.value }))}
+                          placeholder="Search caste..."
+                          required
+                          className="w-full"
+                        />
                       )}
                     </div>
 
@@ -270,8 +306,10 @@ export default function PatientDetailModal() {
                             <button 
                               type="button" 
                               onClick={() => {
-                                if (newRef.trim()) {
-                                  handleModifyList('reference', 'add', newRef.trim());
+                                const trimmed = newRef.trim();
+                                if (trimmed) {
+                                  handleModifyList('reference', 'add', trimmed);
+                                  setEditRef(trimmed);
                                   setNewRef('');
                                   setAddingRef(false);
                                 }
@@ -300,8 +338,10 @@ export default function PatientDetailModal() {
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
-                              if (newRef.trim()) {
-                                handleModifyList('reference', 'add', newRef.trim());
+                              const trimmed = newRef.trim();
+                              if (trimmed) {
+                                handleModifyList('reference', 'add', trimmed);
+                                setEditRef(trimmed);
                                 setNewRef('');
                                 setAddingRef(false);
                               }
@@ -310,19 +350,33 @@ export default function PatientDetailModal() {
                           className="w-full text-sm border border-teal-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-teal-50/30"
                         />
                       ) : (
-                        <select name="reference" defaultValue={selectedPatient.reference} className="w-full text-sm border border-slate-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-teal-500 bg-white shadow-sm" required>
-                          {references.map(ref => <option key={ref.id} value={ref.value}>{ref.value}</option>)}
-                        </select>
+                        <SearchableSelect
+                          name="reference"
+                          value={editRef}
+                          onChange={setEditRef}
+                          options={references.map(ref => ({ value: ref.value, label: ref.value }))}
+                          placeholder="Search reference..."
+                          required
+                          className="w-full"
+                        />
                       )}
                     </div>
                     {currentUser?.role === 'Admin' && (
                       <>
                         <div className="col-span-2 sm:col-span-1">
                           <label className="block text-xs font-medium text-slate-600 mb-1">Assigned Staff</label>
-                          <select name="assignedTo" defaultValue={selectedPatient.assignedTo} className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white" required>
-                            <option value="Unassigned">Unassigned</option>
-                            {staffNames.map(staff => <option key={staff} value={staff}>{staff}</option>)}
-                          </select>
+                          <SearchableSelect
+                            name="assignedTo"
+                            value={editAssignedTo}
+                            onChange={setEditAssignedTo}
+                            options={[
+                              { value: 'Unassigned', label: 'Unassigned' },
+                              ...staffNames.map(staff => ({ value: staff, label: staff }))
+                            ]}
+                            placeholder="Search staff..."
+                            required
+                            className="w-full"
+                          />
                         </div>
                         <div className="col-span-2 sm:col-span-1">
                           <label className="block text-xs font-medium text-slate-600 mb-1">Assignment Type</label>

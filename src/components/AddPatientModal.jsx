@@ -11,108 +11,7 @@ import { Badge } from '../components/Badge';
 import { ManageListCard } from '../components/ManageListCard';
 import { OUTCOMES } from '../lib/constants';
 import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone } from '../utils/helpers';
-
-
-function SearchableSelect({
-  name,
-  label,
-  value,
-  onChange,
-  options,
-  placeholder,
-  required = false,
-  className = '',
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState('');
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) setQuery('');
-  }, [isOpen]);
-
-  const filteredOptions = useMemo(() => {
-    const searchTerm = query.trim().toLowerCase();
-    if (!searchTerm) return options;
-    return options.filter((option) => option.label.toLowerCase().includes(searchTerm));
-  }, [options, query]);
-
-  const selectedOption = options.find((option) => option.value === value);
-
-  return (
-    <div ref={containerRef} className={className}>
-      {label && <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>}
-      <div className="relative">
-        <input
-          type="text"
-          name={name}
-          value={selectedOption ? selectedOption.label : ''}
-          onFocus={() => setIsOpen(true)}
-          onClick={() => setIsOpen(true)}
-          readOnly
-          required={required}
-          placeholder={placeholder}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-teal-500 outline-none bg-white shadow-sm cursor-pointer pr-10 placeholder:text-slate-400"
-        />
-        <ChevronDown className={`pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-
-        {isOpen && (
-          <div className="absolute z-30 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
-            <div className="p-2 border-b border-slate-100 bg-slate-50/80">
-              <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 focus-within:ring-2 focus-within:ring-teal-500">
-                <Search className="h-4 w-4 text-slate-400 shrink-0" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={`Search ${label.toLowerCase()}...`}
-                  className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-                  autoFocus
-                />
-              </div>
-            </div>
-
-            <div className="max-h-56 overflow-y-auto py-1">
-              {filteredOptions.length === 0 ? (
-                <div className="px-3 py-6 text-center text-sm text-slate-500">No matches found</div>
-              ) : (
-                filteredOptions.map((option) => {
-                  const isSelected = option.value === value;
-
-                  return (
-                    <button
-                      key={option.value || option.label}
-                      type="button"
-                      onClick={() => {
-                        onChange(option.value);
-                        setIsOpen(false);
-                      }}
-                      className={`w-full px-3 py-2.5 text-left text-sm transition-colors flex items-center justify-between gap-3 ${isSelected ? 'bg-teal-50 text-teal-700' : 'text-slate-700 hover:bg-slate-50'}`}
-                    >
-                      <span className="truncate">{option.label}</span>
-                      {isSelected && <Check className="h-4 w-4 shrink-0 text-teal-600" />}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+import SearchableSelect from './SearchableSelect';
 
 
 export default function AddPatientModal() {
@@ -174,16 +73,34 @@ export default function AddPatientModal() {
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Full Name *</label>
-                  <input type="text" name="name" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none" />
+                <div className="col-span-2 relative group">
+                  <span
+                    className="absolute -left-0.5 top-2 bottom-2 w-1.5 rounded bg-gradient-to-b from-indigo-500 to-purple-500 opacity-70 transition-all duration-300 group-focus-within:opacity-100"
+                  ></span>
+                  <input
+                    type="text"
+                    name="name"
+                    id="reg-name"
+                    required
+                    placeholder=" "
+                    className="peer w-full pl-6 pr-4 pt-6 pb-2 text-sm text-slate-800 bg-white border border-slate-200 rounded-lg shadow-sm focus:border-transparent focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-300 delay-200 placeholder-shown:placeholder-transparent"
+                  />
+                  <label
+                    htmlFor="reg-name"
+                    className="absolute left-6 top-1 text-xs text-slate-500 transition-all duration-200 ease-in-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:text-slate-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-indigo-500 peer-focus:font-semibold cursor-text"
+                  >
+                    Full Name *
+                  </label>
                 </div>
-                <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">CNIC (Patient ID) *</label>
+                <div className="col-span-2 sm:col-span-1 relative group">
+                  <span
+                    className="absolute -left-0.5 top-2 bottom-2 w-1.5 rounded bg-gradient-to-b from-indigo-500 to-purple-500 opacity-70 transition-all duration-300 group-focus-within:opacity-100"
+                  ></span>
                   <input 
                     type="text" 
                     name="cnic" 
-                    placeholder="XXXXX-XXXXXXX-X" 
+                    id="reg-cnic"
+                    placeholder=" " 
                     required 
                     minLength={15}
                     maxLength={15}
@@ -195,21 +112,36 @@ export default function AddPatientModal() {
                         setAddError('');
                       }
                     }}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none" 
+                    className="peer w-full pl-6 pr-4 pt-6 pb-2 text-sm text-slate-800 bg-white border border-slate-200 rounded-lg shadow-sm focus:border-transparent focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-300 delay-200 placeholder-shown:placeholder-transparent" 
                   />
+                  <label
+                    htmlFor="reg-cnic"
+                    className="absolute left-6 top-1 text-xs text-slate-500 transition-all duration-200 ease-in-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:text-slate-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-indigo-500 peer-focus:font-semibold cursor-text"
+                  >
+                    CNIC (XXXXX-XXXXXXX-X) *
+                  </label>
                 </div>
-                <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number *</label>
+                <div className="col-span-2 sm:col-span-1 relative group">
+                  <span
+                    className="absolute -left-0.5 top-2 bottom-2 w-1.5 rounded bg-gradient-to-b from-indigo-500 to-purple-500 opacity-70 transition-all duration-300 group-focus-within:opacity-100"
+                  ></span>
                   <input 
                     type="tel" 
                     name="phone" 
-                    placeholder="03XX-XXXXXXX" 
+                    id="reg-phone"
+                    placeholder=" " 
                     required 
                     minLength={12}
                     maxLength={12}
                     onChange={(e) => e.target.value = formatPhone(e.target.value)}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none" 
+                    className="peer w-full pl-6 pr-4 pt-6 pb-2 text-sm text-slate-800 bg-white border border-slate-200 rounded-lg shadow-sm focus:border-transparent focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-300 delay-200 placeholder-shown:placeholder-transparent" 
                   />
+                  <label
+                    htmlFor="reg-phone"
+                    className="absolute left-6 top-1 text-xs text-slate-500 transition-all duration-200 ease-in-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:text-slate-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-indigo-500 peer-focus:font-semibold cursor-text"
+                  >
+                    Phone (03XX-XXXXXXX) *
+                  </label>
                 </div>
                 <div className="col-span-2 sm:col-span-1 space-y-2">
                   <div className="flex justify-between items-end mb-1">
@@ -414,9 +346,21 @@ export default function AddPatientModal() {
                     />
                   )}
                 </div>
-                <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Expected Delivery (EDD) *</label>
-                  <input type="date" name="edd" required className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-teal-500 outline-none" />
+                <div className="col-span-2 sm:col-span-1 relative group">
+                  <input 
+                    type="date" 
+                    name="edd" 
+                    id="reg-edd"
+                    required 
+                    placeholder=" "
+                    className="peer w-full pl-3 pr-4 pt-6 pb-2 text-sm text-slate-800 bg-white border border-slate-200 rounded-lg shadow-sm focus:border-transparent focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-300 delay-200 placeholder-shown:placeholder-transparent cursor-pointer" 
+                  />
+                  <label
+                    htmlFor="reg-edd"
+                    className="absolute left-3 top-1 text-xs text-slate-500 transition-all duration-200 ease-in-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:text-slate-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-indigo-500 peer-focus:font-semibold cursor-text"
+                  >
+                    Expected Delivery (EDD) *
+                  </label>
                 </div>
                 {currentUser?.role === 'Admin' ? (
                   <>
@@ -459,11 +403,30 @@ export default function AddPatientModal() {
                 )}
               </div>
               <div className="pt-4 flex justify-end gap-3">
-                <button type="button" onClick={() => { setShowAddModal(false); setAddError(''); }} className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors">
+                <button type="button" onClick={() => { setShowAddModal(false); setAddError(''); }} className="premium-btn-soft px-4 py-2 font-medium">
                   Cancel
                 </button>
-                <button type="submit" disabled={!!addError} className="px-4 py-2 bg-teal-600 text-white font-medium hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center">
-                  <UserPlus className="h-4 w-4 mr-2" /> Register Patient
+                <button
+                  type="submit"
+                  disabled={!!addError}
+                  className="group relative inline-flex items-center justify-center px-6 py-2.5 text-sm sm:text-base font-bold text-white transition-all duration-300 ease-in-out transform hover:scale-[1.01] active:scale-[0.99] disabled:scale-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full overflow-hidden shadow-md shadow-indigo-500/15 cursor-pointer"
+                >
+                  <div
+                    className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500 rounded-full transition-all duration-300 group-hover:scale-105"
+                  ></div>
+
+                  <div
+                    className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-30 transition-opacity duration-300 bg-white blur-md"
+                  ></div>
+
+                  <div
+                    className="absolute inset-0 rounded-full border-2 border-white opacity-20 group-hover:opacity-40 group-hover:scale-102 transition-all duration-300"
+                  ></div>
+
+                  <span className="relative z-10 flex items-center gap-2">
+                    <UserPlus className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:scale-110" />
+                    <span className="tracking-wider">Register Patient</span>
+                  </span>
                 </button>
               </div>
             </form>

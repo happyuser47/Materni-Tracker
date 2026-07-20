@@ -68,68 +68,96 @@ export default function LoginView() {
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Field */}
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">
+            <div className="relative w-full group">
+              <span
+                className="absolute -left-0.5 top-2 bottom-2 w-1.5 rounded bg-gradient-to-b from-indigo-500 to-purple-500 opacity-70 transition-all duration-300 group-focus-within:opacity-100"
+              ></span>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder=" "
+                id="login-email"
+                className="peer w-full pl-6 pr-4 pt-6 pb-2 text-sm text-slate-800 bg-white border border-slate-200 rounded-xl shadow-sm focus:border-transparent focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-300 delay-200 placeholder-shown:placeholder-transparent"
+                autoComplete="email"
+              />
+              <label
+                htmlFor="login-email"
+                className="absolute left-6 top-1 text-xs text-slate-500 transition-all duration-200 ease-in-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:text-slate-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-indigo-500 peer-focus:font-semibold cursor-text"
+              >
                 Email Address
               </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                  <Mail className="h-4.5 w-4.5" />
-                </div>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="Enter your email"
-                  className="w-full pl-11 pr-4 py-3.5 text-sm bg-slate-50/70 border border-slate-200 rounded-xl outline-none transition-all duration-200 focus:bg-white focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 placeholder:text-slate-400"
-                  autoComplete="email"
-                />
-              </div>
             </div>
 
             {/* Password Field */}
-            <div className="space-y-2">
-              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">
+            <div className="relative w-full group">
+              <span
+                className="absolute -left-0.5 top-2 bottom-2 w-1.5 rounded bg-gradient-to-b from-indigo-500 to-purple-500 opacity-70 transition-all duration-300 group-focus-within:opacity-100"
+              ></span>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder=" "
+                id="login-password"
+                className="peer w-full pl-6 pr-12 pt-6 pb-2 text-sm text-slate-800 bg-white border border-slate-200 rounded-xl shadow-sm focus:border-transparent focus:ring-2 focus:ring-indigo-300 focus:outline-none transition-all duration-300 delay-200 placeholder-shown:placeholder-transparent"
+                autoComplete="current-password"
+              />
+              <label
+                htmlFor="login-password"
+                className="absolute left-6 top-1 text-xs text-slate-500 transition-all duration-200 ease-in-out peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-placeholder-shown:text-slate-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-indigo-500 peer-focus:font-semibold cursor-text"
+              >
                 Password
               </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                  <Lock className="h-4.5 w-4.5" />
-                </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="Enter your password"
-                  className="w-full pl-11 pr-12 py-3.5 text-sm bg-slate-50/70 border border-slate-200 rounded-xl outline-none transition-all duration-200 focus:bg-white focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 placeholder:text-slate-400"
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 transition-colors rounded-lg hover:bg-slate-100 z-10"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full relative bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 disabled:from-teal-400 disabled:to-emerald-400 text-white py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg shadow-teal-200/40 hover:shadow-teal-300/50 active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100"
+              className="w-full group relative inline-flex items-center justify-center px-8 py-3.5 text-sm sm:text-base font-bold text-white transition-all duration-300 ease-in-out transform hover:scale-[1.01] active:scale-[0.99] disabled:scale-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-full overflow-hidden shadow-lg shadow-indigo-500/20 cursor-pointer"
             >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Connecting...
+              <div
+                className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-500 to-pink-500 rounded-full transition-all duration-300 group-hover:scale-105"
+              ></div>
+
+              <div
+                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-30 transition-opacity duration-300 bg-white blur-md"
+              ></div>
+
+              <div
+                className="absolute inset-0 rounded-full border-2 border-white opacity-20 group-hover:opacity-40 group-hover:scale-102 transition-all duration-300"
+              ></div>
+
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <span className="tracking-wider">
+                  {isLoading ? 'Connecting...' : 'Sign In'}
                 </span>
-              ) : (
-                'Sign In'
-              )}
+                {!isLoading && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    fill="none"
+                    className="w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1"
+                  >
+                    <path
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                    ></path>
+                  </svg>
+                )}
+              </span>
             </button>
           </form>
         </div>
