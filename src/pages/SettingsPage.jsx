@@ -21,7 +21,7 @@ const SETTINGS_TABS = [
 export default function SettingsPage() {
   const {
     patients, importStatus, setImportStatus, fileInputRef,
-    requestConfirm, areas, castes, references, staffMembers,
+    requestConfirm, areas, castes, references, outcomes, staffMembers,
     alertConfig, currentUser, isSuperAdmin, handleAddStaff,
     handleDeleteStaff, handleFileUpload, handleModifyList, handleUpdateSettings,
     handleWipeAllPatients, batchProgress,
@@ -728,7 +728,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="px-6 py-6 md:px-8 md:py-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">
                 <ManageListCard
                   title="Areas"
                   listType="area"
@@ -751,6 +751,14 @@ export default function SettingsPage() {
                   items={references}
                   handleModifyList={handleModifyList}
                   placeholder="Add new reference..."
+                  requestConfirm={requestConfirm}
+                />
+                <ManageListCard
+                  title="Outcomes"
+                  listType="outcome"
+                  items={outcomes}
+                  handleModifyList={handleModifyList}
+                  placeholder="Add new outcome..."
                   requestConfirm={requestConfirm}
                 />
               </div>

@@ -21,8 +21,4 @@ export const OUTCOMES = [
   'Miscarriage / Loss',
   'Moved Away'
 ];
-export const INITIAL_STAFF = [
-  { id: 1, name: 'Dr. Sarah', role: 'Admin' },
-  { id: 2, name: 'Nurse Fatima', role: 'Staff' },
-  { id: 3, name: 'LHV Ayesha', role: 'Staff' }
-];
+export const DEFAULT_TAGS = [];

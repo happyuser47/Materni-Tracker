@@ -8,6 +8,7 @@ import {
   UserCircle, ChevronDown, ChevronUp, ClipboardList, Copy, Calendar, ChevronLeft
 } from 'lucide-react';
 import { Badge } from '../components/Badge';
+import TagSelector from '../components/TagSelector';
 import { ManageListCard } from '../components/ManageListCard';
 import { OUTCOMES } from '../lib/constants';
 import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone } from '../utils/helpers';
@@ -15,7 +16,37 @@ import SearchableSelect from './SearchableSelect';
 
 
 export default function AddPatientModal() {
-  const { handleModifyList, activeTab, setActiveTab, patients, setPatients, selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, showAddModal, setShowAddModal, addError, setAddError, importStatus, setImportStatus, showNotifications, setShowNotifications, showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, toastMessage, setToastMessage, confirmDialog, setConfirmDialog, requestConfirm, closeConfirm, calendarDate, setCalendarDate, areas, setAreas, castes, setCastes, references, setReferences, staffMembers, setStaffMembers, alertConfig, setAlertConfig, currentUser, setCurrentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent, filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference, filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming, myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities, filteredPatients, filteredMyPatientsList, filteredActivities, activitySummary, teamPerformance, calendarYear, calendarMonth, daysInMonth, firstDayIndex, getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, handleAddInteraction, handleCloseCase, handleReopenCase, handleUpdateInteraction, handleFileUpload, handleAddStaff, handleDeleteStaff, handleCopyPhone, handleDeletePatient } = useApp();
+  const { 
+    handleModifyList, activeTab, setActiveTab, patients, setPatients, 
+    selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, 
+    isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, 
+    showAddModal, setShowAddModal, addError, setAddError, 
+    importStatus, setImportStatus, showNotifications, setShowNotifications, 
+    showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, 
+    toastMessage, setToastMessage, confirmDialog, setConfirmDialog, 
+    requestConfirm, closeConfirm, calendarDate, setCalendarDate, 
+    areas, setAreas, castes, setCastes, references, setReferences, 
+    tags, setTags,
+    staffMembers, setStaffMembers, alertConfig, setAlertConfig, 
+    currentUser, setCurrentUser, searchTerm, setSearchTerm, 
+    filterIntent, setFilterIntent, filterArea, setFilterArea, 
+    filterCaste, setFilterCaste, filterReference, setFilterReference, 
+    filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, 
+    filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, 
+    mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, 
+    activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, 
+    uniqueReferences, uniqueTags, staffNames, activeFilterCount, 
+    globalActive, globalDeliveries, globalAlerts, globalUpcoming, 
+    myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, 
+    dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, 
+    clinicActivities, filteredPatients, filteredMyPatientsList, 
+    filteredActivities, activitySummary, teamPerformance, 
+    calendarYear, calendarMonth, daysInMonth, firstDayIndex, 
+    getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, 
+    handleAddInteraction, handleCloseCase, handleReopenCase, 
+    handleUpdateInteraction, handleFileUpload, handleAddStaff, 
+    handleDeleteStaff, handleCopyPhone, handleDeletePatient 
+  } = useApp();
   
   // Inline Add states
   const [addingArea, setAddingArea] = useState(false);
@@ -28,6 +59,7 @@ export default function AddPatientModal() {
   const [selectedCaste, setSelectedCaste] = useState('');
   const [selectedReference, setSelectedReference] = useState('');
   const [selectedAssignedTo, setSelectedAssignedTo] = useState('Unassigned');
+  const [selectedTags, setSelectedTags] = useState([]);
 
   useEffect(() => {
     if (!showAddModal) {
@@ -41,6 +73,7 @@ export default function AddPatientModal() {
       setSelectedCaste('');
       setSelectedReference('');
       setSelectedAssignedTo('Unassigned');
+      setSelectedTags([]);
     }
   }, [showAddModal]);
 
@@ -66,7 +99,7 @@ export default function AddPatientModal() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={handleAddNewPatient} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
+            <form onSubmit={(e) => handleAddNewPatient(e, selectedTags)} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               {addError && (
                 <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200 flex items-center">
                   <AlertCircle className="h-4 w-4 mr-2" /> {addError}
@@ -401,6 +434,26 @@ export default function AddPatientModal() {
                     </div>
                   </div>
                 )}
+
+                {/* Custom Tags Field */}
+                <div className="col-span-2 space-y-1">
+                  <label className="block text-sm font-medium text-slate-700">Custom Tags & Labels (Optional)</label>
+                  <TagSelector
+                    selectedTags={selectedTags}
+                    availableTags={tags}
+                    onToggleTag={(tag) => {
+                      setSelectedTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+                    }}
+                    onCreateTag={(newTag) => {
+                      setSelectedTags(prev => prev.includes(newTag) ? prev : [...prev, newTag]);
+                    }}
+                    onRemoveTag={(tag) => {
+                      setSelectedTags(prev => prev.filter(t => t !== tag));
+                    }}
+                    mode="inline"
+                    placeholder="Search or type custom tag..."
+                  />
+                </div>
               </div>
               <div className="pt-4 flex justify-end gap-3">
                 <button type="button" onClick={() => { setShowAddModal(false); setAddError(''); }} className="premium-btn-soft px-4 py-2 font-medium">

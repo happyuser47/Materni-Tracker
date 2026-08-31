@@ -1,6 +1,7 @@
 import React from 'react';
 import { Phone, MapPin, Eye, Edit2 } from 'lucide-react';
 import { Badge } from './Badge';
+import { TagBadge } from './TagBadge';
 import { calculateDaysUntil, formatDate } from '../utils/helpers';
 
 export function PatientCard({ patient, onClick, isAdmin }) {
@@ -32,6 +33,20 @@ export function PatientCard({ patient, onClick, isAdmin }) {
           )}
         </div>
       </div>
+
+      {/* Patient Tags */}
+      {Array.isArray(patient.tags) && patient.tags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1">
+          {patient.tags.slice(0, 3).map(tag => (
+            <TagBadge key={tag} tag={tag} size="sm" />
+          ))}
+          {patient.tags.length > 3 && (
+            <span className="text-[10px] text-slate-400 font-semibold px-1 py-0.5 rounded bg-slate-100">
+              +{patient.tags.length - 3} more
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
         <div>

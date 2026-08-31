@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 
 import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone, isPatientOverdue, getPatientAlertType, generateCSVTemplate, exportDataToCSV } from '../utils/helpers';
 import { extractTextFromPDF, parsePdfPatientsForImport } from '../lib/pdfParser';
+import { OUTCOMES, DEFAULT_TAGS } from '../lib/constants';
 
 const AppContext = createContext();
 
@@ -16,17 +17,23 @@ export const AppProvider = ({ children }) => {
         if (type === 'area') setAreas(p => [...p, { id: data.id, value: data.value }]);
         if (type === 'caste') setCastes(p => [...p, { id: data.id, value: data.value }]);
         if (type === 'reference') setReferences(p => [...p, { id: data.id, value: data.value }]);
+        if (type === 'tag') setTags(p => [...p, { id: data.id, value: data.value }]);
+        if (type === 'outcome') setOutcomes(p => [...p, { id: data.id, value: data.value }]);
       }
     } else if (action === 'edit' && id) {
       await supabase.from('custom_lists').update({ value }).eq('id', id);
       if (type === 'area') setAreas(p => p.map(x => x.id === id ? { ...x, value } : x));
       if (type === 'caste') setCastes(p => p.map(x => x.id === id ? { ...x, value } : x));
       if (type === 'reference') setReferences(p => p.map(x => x.id === id ? { ...x, value } : x));
+      if (type === 'tag') setTags(p => p.map(x => x.id === id ? { ...x, value } : x));
+      if (type === 'outcome') setOutcomes(p => p.map(x => x.id === id ? { ...x, value } : x));
     } else if (action === 'delete' && id) {
       await supabase.from('custom_lists').delete().eq('id', id);
       if (type === 'area') setAreas(p => p.filter(x => x.id !== id));
       if (type === 'caste') setCastes(p => p.filter(x => x.id !== id));
       if (type === 'reference') setReferences(p => p.filter(x => x.id !== id));
+      if (type === 'tag') setTags(p => p.filter(x => x.id !== id));
+      if (type === 'outcome') setOutcomes(p => p.filter(x => x.id !== id));
     }
   };
   const handleUpdateSettings = async (newConfig) => {
@@ -79,6 +86,8 @@ export const AppProvider = ({ children }) => {
   const [areas, setAreas] = useState([]);
   const [castes, setCastes] = useState([]);
   const [references, setReferences] = useState([]);
+  const [tags, setTags] = useState([]);
+  const [outcomes, setOutcomes] = useState(() => OUTCOMES.map((o, idx) => ({ id: `default-outcome-${idx}`, value: o })));
   const [staffMembers, setStaffMembers] = useState([]);
   const [alertConfig, setAlertConfig] = useState({ eddProximity: 30, contactGap: 14 });
 
@@ -91,6 +100,7 @@ export const AppProvider = ({ children }) => {
   const [filterArea, setFilterArea] = useState('All');
   const [filterCaste, setFilterCaste] = useState('All');
   const [filterReference, setFilterReference] = useState('All');
+  const [filterTag, setFilterTag] = useState('All');
   const [filterAssignedTo, setFilterAssignedTo] = useState('All');
   const [filterAssignmentType, setFilterAssignmentType] = useState('All');
   const [filterStatus, setFilterStatus] = useState('Active');
@@ -101,6 +111,7 @@ export const AppProvider = ({ children }) => {
   const [mySearchTerm, setMySearchTerm] = useState('');
   const [myFilterStatus, setMyFilterStatus] = useState('Active');
   const [myFilterAssignmentType, setMyFilterAssignmentType] = useState('All');
+  const [myFilterTag, setMyFilterTag] = useState('All');
 
   // Daily Activity State
   const [activityDateFilter, setActivityDateFilter] = useState('');
@@ -109,6 +120,11 @@ export const AppProvider = ({ children }) => {
   const uniqueAreas = ['All', ...areas.map(a => a.value)];
   const uniqueCastes = ['All', ...castes.map(c => c.value)];
   const uniqueReferences = ['All', ...references.map(r => r.value)];
+  const uniqueTags = useMemo(() => {
+    const listValues = tags.map(t => t.value);
+    const patientValues = patients.flatMap(p => p.tags || []);
+    return ['All', ...Array.from(new Set([...listValues, ...patientValues])).filter(Boolean).sort()];
+  }, [tags, patients]);
   const staffNames = staffMembers.map(s => s.name);
 
   const activeFilterCount = useMemo(() => {
@@ -117,10 +133,11 @@ export const AppProvider = ({ children }) => {
     if (filterCaste !== 'All') count++;
     if (filterReference !== 'All') count++;
     if (filterIntent !== 'All') count++;
+    if (filterTag !== 'All') count++;
     if (currentUser?.role === 'Admin' && filterAssignedTo !== 'All') count++;
     if (filterRegStart || filterRegEnd) count++;
     return count;
-  }, [filterArea, filterCaste, filterReference, filterIntent, filterAssignedTo, filterRegStart, filterRegEnd, currentUser?.role]);
+  }, [filterArea, filterCaste, filterReference, filterIntent, filterTag, filterAssignedTo, filterRegStart, filterRegEnd, currentUser?.role]);
 
   // --- CORE DATA SEGMENTATION ---
 
@@ -243,6 +260,8 @@ export const AppProvider = ({ children }) => {
                             filterStatus === 'Resolved' ? p.status !== 'Active' :
                             p.status === filterStatus;
 
+      const matchesTag = filterTag === 'All' || (Array.isArray(p.tags) && p.tags.includes(filterTag));
+
       let matchesRegDate = true;
       if (filterRegStart || filterRegEnd) {
         if (!p.registrationDate) {
@@ -267,9 +286,9 @@ export const AppProvider = ({ children }) => {
         }
       }
 
-      return matchesSearch && matchesIntent && matchesArea && matchesCaste && matchesReference && matchesAssigned && matchesAssignmentType && matchesStatus && matchesRegDate;
+      return matchesSearch && matchesIntent && matchesArea && matchesCaste && matchesReference && matchesAssigned && matchesAssignmentType && matchesStatus && matchesRegDate && matchesTag;
     }).sort((a, b) => new Date(a.edd) - new Date(b.edd));
-  }, [patients, searchTerm, filterIntent, filterArea, filterCaste, filterReference, filterAssignedTo, filterAssignmentType, filterStatus, filterRegStart, filterRegEnd]);
+  }, [patients, searchTerm, filterIntent, filterArea, filterCaste, filterReference, filterTag, filterAssignedTo, filterAssignmentType, filterStatus, filterRegStart, filterRegEnd]);
 
   // Personal Directory Filtering ("My Patients" Table)
   const filteredMyPatientsList = useMemo(() => {
@@ -280,9 +299,10 @@ export const AppProvider = ({ children }) => {
                             myFilterStatus === 'Resolved' ? p.status !== 'Active' :
                             p.status === myFilterStatus;
       const matchesAssignment = myFilterAssignmentType === 'All' || p.assignmentType === myFilterAssignmentType;
-      return matchesSearch && matchesStatus && matchesAssignment;
+      const matchesTag = myFilterTag === 'All' || (Array.isArray(p.tags) && p.tags.includes(myFilterTag));
+      return matchesSearch && matchesStatus && matchesAssignment && matchesTag;
     }).sort((a, b) => new Date(a.edd) - new Date(b.edd));
-  }, [myPatientsList, mySearchTerm, myFilterStatus, myFilterAssignmentType]);
+  }, [myPatientsList, mySearchTerm, myFilterStatus, myFilterAssignmentType, myFilterTag]);
 
   // Daily Activity Filtering
   const filteredActivities = useMemo(() => {
@@ -363,6 +383,12 @@ export const AppProvider = ({ children }) => {
       setAreas(lists.filter(l => l.list_type === 'area').map(l => ({ id: l.id, value: l.value })));
       setCastes(lists.filter(l => l.list_type === 'caste').map(l => ({ id: l.id, value: l.value })));
       setReferences(lists.filter(l => l.list_type === 'reference').map(l => ({ id: l.id, value: l.value })));
+      const tagList = lists.filter(l => l.list_type === 'tag');
+      setTags(tagList.map(l => ({ id: l.id, value: l.value })));
+      const outcomeList = lists.filter(l => l.list_type === 'outcome');
+      if (outcomeList.length > 0) {
+        setOutcomes(outcomeList.map(l => ({ id: l.id, value: l.value })));
+      }
     }
 
     // Fetch Staff
@@ -380,6 +406,18 @@ export const AppProvider = ({ children }) => {
         }
       }
     }
+
+    const parsePatientTags = (raw) => {
+      if (Array.isArray(raw)) return raw;
+      if (!raw) return [];
+      if (typeof raw === 'string') {
+        if (raw.startsWith('[') && raw.endsWith(']')) {
+          try { return JSON.parse(raw); } catch { return []; }
+        }
+        return raw.split(';').flatMap(s => s.split(',')).map(s => s.trim()).filter(Boolean);
+      }
+      return [];
+    };
 
     // Fetch Patients & Interactions
     const { data: pData, error: pError } = await supabase.from('patients').select(`
@@ -401,6 +439,7 @@ export const AppProvider = ({ children }) => {
         area: p.area,
         caste: p.caste,
         reference: p.reference,
+        tags: parsePatientTags(p.tags),
         assignedTo: p.assigned_to_staff ? p.assigned_to_staff.name : 'Unassigned',
         assignmentType: p.assignment_type || 'Secondary',
         edd: p.edd,
@@ -436,8 +475,52 @@ export const AppProvider = ({ children }) => {
     }
   }, [patients]);
 
+  const handleTogglePatientTag = async (patientId, tagName) => {
+    const trimmed = (tagName || '').trim();
+    if (!trimmed) return;
+
+    const patient = patients.find(p => p.id === patientId || p.uuid === patientId);
+    if (!patient) return;
+
+    const currentTags = Array.isArray(patient.tags) ? patient.tags : [];
+    const hasTag = currentTags.some(t => t.toLowerCase() === trimmed.toLowerCase());
+    const updatedTags = hasTag
+      ? currentTags.filter(t => t.toLowerCase() !== trimmed.toLowerCase())
+      : [...currentTags, trimmed];
+
+    // Optimistically update local state
+    setPatients(prev => prev.map(p => {
+      if (p.id === patient.id || p.uuid === patient.uuid) {
+        return { ...p, tags: updatedTags };
+      }
+      return p;
+    }));
+
+    if (selectedPatient && (selectedPatient.id === patient.id || selectedPatient.uuid === patient.uuid)) {
+      setSelectedPatient(prev => prev ? { ...prev, tags: updatedTags } : null);
+    }
+
+    // Persist to Supabase
+    try {
+      await supabase.from('patients').update({ tags: updatedTags }).eq('id', patient.uuid);
+    } catch (err) {
+      console.warn('Supabase tag update notice:', err);
+    }
+
+    // If new tag not yet in master list, also save to custom_lists
+    if (!tags.some(t => t.value.toLowerCase() === trimmed.toLowerCase())) {
+      handleModifyList('tag', 'add', trimmed);
+    }
+
+    setToastMessage({
+      type: 'success',
+      text: hasTag ? `Removed tag "${trimmed}"` : `Added tag "${trimmed}" to ${patient.name}`
+    });
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
   // Handlers
-  const handleAddNewPatient = async (e) => {
+  const handleAddNewPatient = async (e, customTags = []) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const cnic = formData.get('cnic');
@@ -464,11 +547,16 @@ export const AppProvider = ({ children }) => {
     // Assignment type: Primary or Secondary (admin can set, staff defaults to Secondary)
     const assignmentType = currentUser?.role === 'Admin' ? (formData.get('assignmentType') || 'Secondary') : 'Secondary';
 
+    const patientTags = Array.isArray(customTags) && customTags.length > 0
+      ? customTags
+      : (formData.get('tags') ? formData.get('tags').split(',').map(t => t.trim()).filter(Boolean) : []);
+
     const newPatient = {
       cnic, name, phone: formData.get('phone'), area: formData.get('area'),
       caste: formData.get('caste'), reference: formData.get('reference'),
       assigned_to: assignedToId,
       assignment_type: assignmentType,
+      tags: patientTags,
       edd: formData.get('edd'), intent: 'Medium', preference: 'Undecided',
       status: 'Active', registration_date: new Date().toISOString(), last_contact: new Date().toISOString()
     };
@@ -485,6 +573,7 @@ export const AppProvider = ({ children }) => {
     const mappedPatient = {
       uuid: pData.id, id: pData.cnic, name: pData.name, phone: pData.phone, area: pData.area, caste: pData.caste, reference: pData.reference,
       assignedTo: assignedStaffName, assignmentType,
+      tags: patientTags,
       edd: pData.edd, intent: pData.intent, preference: pData.preference, status: pData.status,
       registrationDate: pData.registration_date, lastContact: pData.last_contact,
       interactions: [{
@@ -499,7 +588,7 @@ export const AppProvider = ({ children }) => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleUpdatePatientDetails = async (e) => {
+  const handleUpdatePatientDetails = async (e, customTags = null) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const assignedStaffName = currentUser?.role === 'Admin' ? formData.get('assignedTo') : selectedPatient.assignedTo;
@@ -508,15 +597,24 @@ export const AppProvider = ({ children }) => {
 
     const assignmentType = currentUser?.role === 'Admin' ? (formData.get('assignmentType') || selectedPatient.assignmentType) : selectedPatient.assignmentType;
 
+    const patientTags = customTags !== null
+      ? customTags
+      : (formData.get('tags') ? formData.get('tags').split(',').map(t => t.trim()).filter(Boolean) : (selectedPatient.tags || []));
+
     const updates = {
       name: formData.get('name'), phone: formData.get('phone'), area: formData.get('area'),
       caste: formData.get('caste'), reference: formData.get('reference'),
       assigned_to: assignedToId,
       assignment_type: assignmentType,
+      tags: patientTags,
       edd: formData.get('edd')
     };
 
-    await supabase.from('patients').update(updates).eq('id', selectedPatient.uuid);
+    try {
+      await supabase.from('patients').update(updates).eq('id', selectedPatient.uuid);
+    } catch (err) {
+      console.warn('Supabase update warning:', err);
+    }
 
     setPatients(prev => prev.map(p => {
       if (p.uuid === selectedPatient.uuid) {
@@ -525,12 +623,15 @@ export const AppProvider = ({ children }) => {
           name: updates.name, phone: updates.phone, area: updates.area,
           caste: updates.caste, reference: updates.reference, edd: updates.edd,
           assignedTo: assignedStaffName, assignmentType,
+          tags: patientTags,
           id: selectedPatient.id
         };
       }
       return p;
     }));
     setIsEditingDetails(false);
+    setToastMessage({ type: 'success', text: `Details updated for ${updates.name}` });
+    setTimeout(() => setToastMessage(null), 2500);
   };
 
   const handleAddInteraction = async (patientId, interactionData) => {
@@ -1092,6 +1193,16 @@ Status: ${patient.status}`;
     daysInMonth,
     firstDayIndex,
     getPatientsForDate,
+    tags,
+    setTags,
+    uniqueTags,
+    filterTag,
+    setFilterTag,
+    myFilterTag,
+    setMyFilterTag,
+    handleTogglePatientTag,
+    outcomes,
+    setOutcomes,
     handleAddNewPatient,
     handleUpdatePatientDetails,
     handleAddInteraction,
@@ -1117,10 +1228,10 @@ Status: ${patient.status}`;
     isLoading, isSuperAdmin, activeTab, patients, selectedPatient, editingInteractionId, 
     isEditingDetails, isClosingCase, showAddModal, addError, importStatus, pdfImportPreview,
     showNotifications, showFilters, isSidebarOpen, toastMessage, confirmDialog,
-    calendarDate, areas, castes, references, staffMembers, alertConfig, currentUser,
-    searchTerm, filterIntent, filterArea, filterCaste, filterReference, filterAssignedTo, filterAssignmentType,
+    calendarDate, areas, castes, references, tags, outcomes, staffMembers, alertConfig, currentUser,
+    searchTerm, filterIntent, filterArea, filterCaste, filterReference, filterTag, filterAssignedTo, filterAssignmentType,
     filterStatus, filterRegStart, filterRegEnd, mySearchTerm, myFilterStatus,
-    myFilterAssignmentType, activityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames,
+    myFilterAssignmentType, myFilterTag, activityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, uniqueTags, staffNames,
     activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming,
     myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive,
     dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities,

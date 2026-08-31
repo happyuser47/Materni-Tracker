@@ -109,9 +109,9 @@ Logs time-series interaction details for patients.
 * `next_interaction_date` (date) — Scheduled next checkup date
 
 ### 4. `custom_lists`
-Utility configuration elements for app-wide custom dropdowns.
+Utility configuration elements for app-wide custom dropdowns and patient tags.
 * `id` (bigint, PK)
-* `list_type` (text) — `'area'`, `'caste'`, or `'reference'`
+* `list_type` (text) — `'area'`, `'caste'`, `'reference'`, or `'tag'`
 * `value` (text, not null)
 
 ### 5. `system_settings`
@@ -135,12 +135,12 @@ State is managed through two main providers in the `src/context/` directory:
   * `isSuperAdmin` (true if authenticated email matches `usama786@gmail.com`)
 
 ### 2. `AppContext.jsx`
-* Orchestrates core CRUD operations (adding/updating patients, logging interactions, deleting records).
-* Fetches all settings, dropdown lists, staff directories, patients, and interaction histories.
-* Handles CSV bulk loading and export routines.
+* Orchestrates core CRUD operations (adding/updating patients, logging interactions, deleting records, toggling custom tags).
+* Fetches all settings, dropdown lists, custom tags, staff directories, patients, and interaction histories.
+* Handles CSV bulk loading and export routines (with Tag support).
 * Parses PDFs and maintains temporary upload preview states.
 * Configures global dialog modals (`showAddModal`, `selectedPatient`, `confirmDialog`, `toastMessage`).
-* Exposes filtered datasets based on global filters (Intent, Area, Caste, Reference, Assignment, Registration Dates, and search tokens).
+* Exposes filtered datasets based on global filters (Intent, Area, Caste, Reference, Custom Tags, Assignment, Registration Dates, and search tokens).
 
 ---
 

@@ -2,10 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   Users, Search, Filter, Phone, MapPin, 
-  UserPlus, Edit2, Eye, Download,
+  UserPlus, Edit2, Eye, Download, Tag, X,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Badge } from '../components/Badge';
+import { TagBadge } from '../components/TagBadge';
 import { PatientCard } from '../components/PatientCard';
 import { calculateDaysUntil, formatDate, exportDataToCSV } from '../utils/helpers';
 import { OUTCOMES } from '../lib/constants';
@@ -17,6 +18,7 @@ export default function PatientDirectory() {
     setSelectedPatient, setShowAddModal, showFilters, setShowFilters,
     currentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent,
     filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference,
+    filterTag, setFilterTag, uniqueTags, outcomes,
     filterAssignedTo, setFilterAssignedTo, filterAssignmentType, setFilterAssignmentType, filterStatus, setFilterStatus,
     filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd,
     uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount,
@@ -214,6 +216,10 @@ export default function PatientDirectory() {
                       </>
                     )}
 
+                    <select className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white" value={filterTag} onChange={(e) => { setFilterTag(e.target.value); resetPage(); }}>
+                      {uniqueTags.map(tag => <option key={tag} value={tag}>{tag === 'All' ? '🏷️ All Tags / Labels' : `🏷️ ${tag}`}</option>)}
+                    </select>
+
                     <select className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 text-sm bg-white" value={filterArea} onChange={(e) => { setFilterArea(e.target.value); resetPage(); }}>
                       {uniqueAreas.map(area => <option key={area} value={area}>{area === 'All' ? 'All Areas' : area}</option>)}
                     </select>
@@ -238,7 +244,7 @@ export default function PatientDirectory() {
                       <option value="Active">Active Cases</option>
                       <option value="Resolved">All Closed Cases</option>
                       <optgroup label="Specific Outcomes">
-                        {OUTCOMES.map(o => <option key={o} value={o}>{o}</option>)}
+                        {(outcomes?.length > 0 ? outcomes.map(o => o.value) : OUTCOMES).map(o => <option key={o} value={o}>{o}</option>)}
                       </optgroup>
                     </select>
 
@@ -252,15 +258,29 @@ export default function PatientDirectory() {
                     {activeFilterCount > 0 && (
                       <button 
                         onClick={() => {
-                          setFilterArea('All'); setFilterCaste('All'); setFilterReference('All'); setFilterIntent('All');
+                          setFilterArea('All'); setFilterCaste('All'); setFilterReference('All'); setFilterIntent('All'); setFilterTag('All');
                           if (currentUser?.role === 'Admin') setFilterAssignedTo('All');
                           setFilterRegStart(''); setFilterRegEnd(''); resetPage();
                         }}
-                        className="text-xs text-slate-500 hover:text-red-600 font-medium text-right self-center underline decoration-dotted underline-offset-2"
+                        className="text-xs text-slate-500 hover:text-red-600 font-medium text-right self-center underline decoration-dotted underline-offset-2 cursor-pointer"
                       >
                         Clear Advanced
                       </button>
                     )}
+                  </div>
+                )}
+
+                {/* Active Tag Filter Pill */}
+                {filterTag !== 'All' && (
+                  <div className="pt-2 mt-2 border-t border-slate-100 flex items-center gap-2">
+                    <span className="text-xs font-medium text-slate-500 flex items-center">
+                      <Tag className="h-3 w-3 mr-1 text-teal-600" /> Filtered by:
+                    </span>
+                    <TagBadge 
+                      tag={filterTag} 
+                      onRemove={() => { setFilterTag('All'); resetPage(); }} 
+                      size="sm" 
+                    />
                   </div>
                 )}
               </div>
@@ -320,9 +340,21 @@ export default function PatientDirectory() {
                             <td className="p-4">
                               <p className="font-semibold text-slate-900 whitespace-nowrap">{patient.name}</p>
                               <p className="text-sm text-slate-500 flex items-center mt-1 whitespace-nowrap">
-                                <Phone className="h-3 w-3 mr-1" /> {patient.phone}
+                                <Phone className="h-3 w-3 mr-1 text-teal-600" /> {patient.phone}
                               </p>
                               <p className="text-xs text-slate-400 mt-0.5 whitespace-nowrap">ID: {patient.id}</p>
+                              {Array.isArray(patient.tags) && patient.tags.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-1 mt-1.5 max-w-[200px]">
+                                  {patient.tags.slice(0, 2).map(tag => (
+                                    <TagBadge key={tag} tag={tag} size="sm" />
+                                  ))}
+                                  {patient.tags.length > 2 && (
+                                    <span className="text-[10px] text-slate-400 font-semibold px-1 py-0.5 rounded bg-slate-100">
+                                      +{patient.tags.length - 2}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </td>
                             <td className="p-4">
                               {patient.status === 'Active' ? (

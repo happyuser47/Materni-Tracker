@@ -8,6 +8,7 @@ import {
   UserCircle, ChevronDown, ChevronUp, ClipboardList, Copy, Calendar, ChevronLeft
 } from 'lucide-react';
 import { Badge } from '../components/Badge';
+import { TagBadge } from '../components/TagBadge';
 import { PatientCard } from '../components/PatientCard';
 import { ManageListCard } from '../components/ManageListCard';
 import { OUTCOMES } from '../lib/constants';
@@ -15,7 +16,37 @@ import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone
 
 
 export default function MyPatients() {
-  const { activeTab, setActiveTab, patients, setPatients, selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, showAddModal, setShowAddModal, addError, setAddError, importStatus, setImportStatus, showNotifications, setShowNotifications, showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, toastMessage, setToastMessage, confirmDialog, setConfirmDialog, requestConfirm, closeConfirm, calendarDate, setCalendarDate, areas, setAreas, castes, setCastes, references, setReferences, staffMembers, setStaffMembers, alertConfig, setAlertConfig, currentUser, setCurrentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent, filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference, filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, myFilterAssignmentType, setMyFilterAssignmentType, activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming, myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities, filteredPatients, filteredMyPatientsList, filteredActivities, activitySummary, teamPerformance, calendarYear, calendarMonth, daysInMonth, firstDayIndex, getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, handleAddInteraction, handleCloseCase, handleReopenCase, handleUpdateInteraction, handleFileUpload, handleAddStaff, handleDeleteStaff, handleCopyPhone, handleDeletePatient } = useApp();
+  const { 
+    activeTab, setActiveTab, patients, setPatients, 
+    selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, 
+    isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, 
+    showAddModal, setShowAddModal, addError, setAddError, 
+    importStatus, setImportStatus, showNotifications, setShowNotifications, 
+    showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, 
+    toastMessage, setToastMessage, confirmDialog, setConfirmDialog, 
+    requestConfirm, closeConfirm, calendarDate, setCalendarDate, 
+    areas, setAreas, castes, setCastes, references, setReferences, 
+    tags, setTags, myFilterTag, setMyFilterTag, uniqueTags,
+    staffMembers, setStaffMembers, alertConfig, setAlertConfig, 
+    currentUser, setCurrentUser, searchTerm, setSearchTerm, 
+    filterIntent, setFilterIntent, filterArea, setFilterArea, 
+    filterCaste, setFilterCaste, filterReference, setFilterReference, 
+    filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, 
+    filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, 
+    mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, 
+    myFilterAssignmentType, setMyFilterAssignmentType, activityDateFilter, 
+    setActivityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, 
+    staffNames, activeFilterCount, globalActive, globalDeliveries, 
+    globalAlerts, globalUpcoming, myPatientsList, myActive, myDeliveries, 
+    myAlerts, myUpcoming, dashActive, dashDeliveries, dashAlerts, 
+    dashUpcoming, bellAlerts, clinicActivities, filteredPatients, 
+    filteredMyPatientsList, filteredActivities, activitySummary, 
+    teamPerformance, calendarYear, calendarMonth, daysInMonth, 
+    firstDayIndex, getPatientsForDate, handleAddNewPatient, 
+    handleUpdatePatientDetails, handleAddInteraction, handleCloseCase, 
+    handleReopenCase, handleUpdateInteraction, handleFileUpload, 
+    handleAddStaff, handleDeleteStaff, handleCopyPhone, handleDeletePatient 
+  } = useApp();
 
   return (
     <>
@@ -222,6 +253,16 @@ export default function MyPatients() {
             </div>
             <div className="flex items-center gap-2 shrink-0 overflow-x-auto">
               <select
+                value={myFilterTag || 'All'}
+                onChange={(e) => setMyFilterTag(e.target.value)}
+                className="bg-slate-100 text-slate-700 text-xs font-medium px-2 py-1.5 rounded-lg outline-none border border-transparent focus:border-slate-300"
+              >
+                {uniqueTags.map(tag => (
+                  <option key={tag} value={tag}>{tag === 'All' ? '🏷️ All Tags' : `🏷️ ${tag}`}</option>
+                ))}
+              </select>
+
+              <select
                 value={myFilterAssignmentType || 'All'}
                 onChange={(e) => setMyFilterAssignmentType(e.target.value)}
                 className="bg-slate-100 text-slate-700 text-xs font-medium px-2 py-1.5 rounded-lg outline-none border border-transparent focus:border-slate-300"
@@ -288,7 +329,7 @@ export default function MyPatients() {
               <tbody className="divide-y divide-slate-100">
                 {filteredMyPatientsList.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="p-8 text-center text-slate-500">
+                    <td colSpan="7" className="p-8 text-center text-slate-500">
                       No patients found in your personal workload.
                     </td>
                   </tr>
@@ -305,8 +346,20 @@ export default function MyPatients() {
                       <td className="p-4">
                         <p className="font-semibold text-slate-900 whitespace-nowrap">{patient.name}</p>
                         <p className="text-sm text-slate-500 flex items-center mt-1 whitespace-nowrap">
-                          <Phone className="h-3 w-3 mr-1" /> {patient.phone}
+                          <Phone className="h-3 w-3 mr-1 text-teal-600" /> {patient.phone}
                         </p>
+                        {Array.isArray(patient.tags) && patient.tags.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1 mt-1.5 max-w-[200px]">
+                            {patient.tags.slice(0, 2).map(tag => (
+                              <TagBadge key={tag} tag={tag} size="sm" />
+                            ))}
+                            {patient.tags.length > 2 && (
+                              <span className="text-[10px] text-slate-400 font-semibold px-1 py-0.5 rounded bg-slate-100">
+                                +{patient.tags.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
                       <td className="p-4">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded w-fit ${patient.assignmentType === 'Secondary' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}`}>

@@ -90,8 +90,8 @@ export const getPatientAlertType = (patient, alertConfig) => {
 
 // CSV Helper Functions
 export const generateCSVTemplate = () => {
-  const headers = ['Name', 'CNIC', 'Phone', 'Area', 'Caste', 'Reference', 'AssignedTo', 'EDD_YYYY_MM_DD'];
-  const csvContent = headers.join(',') + '\nExample Name,12345-1234567-1,0300-1234567,Ward 5 Layyah,Rajput,LHV,Nurse Fatima,2026-10-15';
+  const headers = ['Name', 'CNIC', 'Phone', 'Area', 'Caste', 'Reference', 'AssignedTo', 'EDD_YYYY_MM_DD', 'Tags'];
+  const csvContent = headers.join(',') + '\nExample Name,12345-1234567-1,0300-1234567,Ward 5 Layyah,Rajput,LHV,Nurse Fatima,2026-10-15,"High Risk; First Pregnancy"';
   
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -101,12 +101,13 @@ export const generateCSVTemplate = () => {
 };
 
 export const exportDataToCSV = (patients) => {
-  const headers = ['#', 'CNIC', 'Name', 'Phone', 'Area', 'Caste', 'Reference', 'Primary Worker', 'Role', 'Status', 'Intent', 'Preference', 'EDD', 'Days Until EDD', 'Registration Date', 'Last Contact', 'Follow-up Count'];
+  const headers = ['#', 'CNIC', 'Name', 'Phone', 'Area', 'Caste', 'Reference', 'Primary Worker', 'Role', 'Status', 'Intent', 'Preference', 'Tags', 'EDD', 'Days Until EDD', 'Registration Date', 'Last Contact', 'Follow-up Count'];
   
   const rows = patients.map((p, index) => {
     const daysUntilEDD = calculateDaysUntil(p.edd);
     const interactionCount = p.interactions?.length || 0;
-    return `"${index + 1}","${p.id}","${p.name}","${p.phone}","${p.area}","${p.caste}","${p.reference}","${p.assignedTo}","${p.assignmentType || 'Secondary'}","${p.status}","${p.intent}","${p.preference}","${formatDate(p.edd)}","${daysUntilEDD}","${formatDate(p.registrationDate)}","${formatDate(p.lastContact)}","${interactionCount}"`;
+    const tagString = Array.isArray(p.tags) ? p.tags.join('; ') : (p.tags || '');
+    return `"${index + 1}","${p.id}","${p.name}","${p.phone}","${p.area}","${p.caste}","${p.reference}","${p.assignedTo}","${p.assignmentType || 'Secondary'}","${p.status}","${p.intent}","${p.preference}","${tagString}","${formatDate(p.edd)}","${daysUntilEDD}","${formatDate(p.registrationDate)}","${formatDate(p.lastContact)}","${interactionCount}"`;
   });
   
   const csvContent = [headers.join(','), ...rows].join('\n');

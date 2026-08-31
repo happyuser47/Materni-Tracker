@@ -8,6 +8,8 @@ import {
   UserCircle, ChevronDown, ChevronUp, ClipboardList, Copy, Calendar, ChevronLeft
 } from 'lucide-react';
 import { Badge } from '../components/Badge';
+import { TagBadge } from '../components/TagBadge';
+import TagSelector from '../components/TagSelector';
 import { ManageListCard } from '../components/ManageListCard';
 import { OUTCOMES } from '../lib/constants';
 import { calculateDaysUntil, formatDate, formatDateTime, formatCNIC, formatPhone } from '../utils/helpers';
@@ -15,7 +17,38 @@ import SearchableSelect from './SearchableSelect';
 
 
 export default function PatientDetailModal() {
-  const { handleModifyList, activeTab, setActiveTab, patients, setPatients, selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, showAddModal, setShowAddModal, addError, setAddError, importStatus, setImportStatus, showNotifications, setShowNotifications, showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, toastMessage, setToastMessage, confirmDialog, setConfirmDialog, requestConfirm, closeConfirm, calendarDate, setCalendarDate, areas, setAreas, castes, setCastes, references, setReferences, staffMembers, setStaffMembers, alertConfig, setAlertConfig, currentUser, setCurrentUser, searchTerm, setSearchTerm, filterIntent, setFilterIntent, filterArea, setFilterArea, filterCaste, setFilterCaste, filterReference, setFilterReference, filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, uniqueReferences, staffNames, activeFilterCount, globalActive, globalDeliveries, globalAlerts, globalUpcoming, myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, clinicActivities, filteredPatients, filteredMyPatientsList, filteredActivities, activitySummary, teamPerformance, calendarYear, calendarMonth, daysInMonth, firstDayIndex, getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, handleAddInteraction, handleCloseCase, handleReopenCase, handleUpdateInteraction, handleFileUpload, handleAddStaff, handleDeleteStaff, handleCopyPhone, handleCopyPatientDetail, handleDeletePatient } = useApp();
+  const { 
+    handleModifyList, activeTab, setActiveTab, patients, setPatients, 
+    selectedPatient, setSelectedPatient, editingInteractionId, setEditingInteractionId, 
+    isEditingDetails, setIsEditingDetails, isClosingCase, setIsClosingCase, 
+    showAddModal, setShowAddModal, addError, setAddError, 
+    importStatus, setImportStatus, showNotifications, setShowNotifications, 
+    showFilters, setShowFilters, fileInputRef, isSidebarOpen, setIsSidebarOpen, 
+    toastMessage, setToastMessage, confirmDialog, setConfirmDialog, 
+    requestConfirm, closeConfirm, calendarDate, setCalendarDate, 
+    areas, setAreas, castes, setCastes, references, setReferences, 
+    tags, setTags, handleTogglePatientTag, outcomes, setOutcomes,
+    staffMembers, setStaffMembers, alertConfig, setAlertConfig, 
+    currentUser, setCurrentUser, searchTerm, setSearchTerm, 
+    filterIntent, setFilterIntent, filterArea, setFilterArea, 
+    filterCaste, setFilterCaste, filterReference, setFilterReference, 
+    filterAssignedTo, setFilterAssignedTo, filterStatus, setFilterStatus, 
+    filterRegStart, setFilterRegStart, filterRegEnd, setFilterRegEnd, 
+    mySearchTerm, setMySearchTerm, myFilterStatus, setMyFilterStatus, 
+    activityDateFilter, setActivityDateFilter, uniqueAreas, uniqueCastes, 
+    uniqueReferences, uniqueTags, staffNames, activeFilterCount, 
+    globalActive, globalDeliveries, globalAlerts, globalUpcoming, 
+    myPatientsList, myActive, myDeliveries, myAlerts, myUpcoming, 
+    dashActive, dashDeliveries, dashAlerts, dashUpcoming, bellAlerts, 
+    clinicActivities, filteredPatients, filteredMyPatientsList, 
+    filteredActivities, activitySummary, teamPerformance, 
+    calendarYear, calendarMonth, daysInMonth, firstDayIndex, 
+    getPatientsForDate, handleAddNewPatient, handleUpdatePatientDetails, 
+    handleAddInteraction, handleCloseCase, handleReopenCase, 
+    handleUpdateInteraction, handleFileUpload, handleAddStaff, 
+    handleDeleteStaff, handleCopyPhone, handleCopyPatientDetail, 
+    handleDeletePatient 
+  } = useApp();
   
   // Inline Add states
   const [addingArea, setAddingArea] = useState(false);
@@ -30,6 +63,7 @@ export default function PatientDetailModal() {
   const [editCaste, setEditCaste] = useState('');
   const [editRef, setEditRef] = useState('');
   const [editAssignedTo, setEditAssignedTo] = useState('Unassigned');
+  const [editTags, setEditTags] = useState([]);
 
   useEffect(() => {
     if (selectedPatient) {
@@ -37,6 +71,7 @@ export default function PatientDetailModal() {
       setEditCaste(selectedPatient.caste || '');
       setEditRef(selectedPatient.reference || '');
       setEditAssignedTo(selectedPatient.assignedTo || 'Unassigned');
+      setEditTags(Array.isArray(selectedPatient.tags) ? selectedPatient.tags : []);
     }
   }, [selectedPatient, isEditingDetails]);
 
@@ -57,8 +92,8 @@ export default function PatientDetailModal() {
             
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-200 flex justify-between items-start bg-slate-50">
-              <div>
-                <div className="flex items-center gap-3 mb-1">
+              <div className="flex-1 pr-2 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <h2 className="text-xl font-bold text-slate-900">{selectedPatient.name}</h2>
                   {selectedPatient.status === 'Active' ? (
                      <Badge type={selectedPatient.intent}>{selectedPatient.intent} Intent</Badge>
@@ -71,8 +106,27 @@ export default function PatientDetailModal() {
                 <p className="text-sm text-slate-500">
                   CNIC: {selectedPatient.id} • Reg: {formatDate(selectedPatient.registrationDate)}
                 </p>
+
+                {/* Custom Tags / Labels */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                  {Array.isArray(selectedPatient.tags) && selectedPatient.tags.map(tag => (
+                    <TagBadge 
+                      key={tag} 
+                      tag={tag} 
+                      size="sm"
+                      onRemove={() => handleTogglePatientTag(selectedPatient.id, tag)} 
+                    />
+                  ))}
+                  <TagSelector
+                    selectedTags={selectedPatient.tags || []}
+                    availableTags={tags}
+                    onToggleTag={(tagName) => handleTogglePatientTag(selectedPatient.id, tagName)}
+                    mode="popover"
+                    buttonLabel={selectedPatient.tags?.length > 0 ? "Tag" : "Add Tag"}
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button 
                   onClick={() => handleCopyPatientDetail(selectedPatient)}
                   className="p-2 text-slate-400 hover:text-teal-600 hover:bg-slate-200 rounded-full transition-colors"
@@ -120,7 +174,7 @@ export default function PatientDetailModal() {
               
               {/* Info Cards / Edit Form */}
               {isEditingDetails ? (
-                <form onSubmit={handleUpdatePatientDetails} className="bg-slate-50 p-4 rounded-xl border border-teal-200 space-y-3 shadow-sm">
+                <form onSubmit={(e) => handleUpdatePatientDetails(e, editTags)} className="bg-slate-50 p-4 rounded-xl border border-teal-200 space-y-3 shadow-sm">
                   <h3 className="font-semibold text-teal-800 flex items-center mb-2">
                     <Edit2 className="h-4 w-4 mr-2" /> Edit Patient Info
                   </h3>
@@ -387,6 +441,26 @@ export default function PatientDetailModal() {
                         </div>
                       </>
                     )}
+
+                    {/* Custom Tags Field */}
+                    <div className="col-span-2">
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Patient Tags & Labels</label>
+                      <TagSelector
+                        selectedTags={editTags}
+                        availableTags={tags}
+                        onToggleTag={(tag) => {
+                          setEditTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+                        }}
+                        onCreateTag={(newTag) => {
+                          setEditTags(prev => prev.includes(newTag) ? prev : [...prev, newTag]);
+                        }}
+                        onRemoveTag={(tag) => {
+                          setEditTags(prev => prev.filter(t => t !== tag));
+                        }}
+                        mode="inline"
+                        placeholder="Add or create custom tag..."
+                      />
+                    </div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2">
                     <button type="button" onClick={() => setIsEditingDetails(false)} className="px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">Cancel</button>
@@ -525,7 +599,7 @@ export default function PatientDetailModal() {
                         <label className="block text-xs font-medium text-slate-600 mb-1">Final Outcome</label>
                         <select name="outcome" className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 bg-white font-medium" required>
                           <option value="">Select Outcome...</option>
-                          {OUTCOMES.map(o => <option key={o} value={o}>{o}</option>)}
+                          {(outcomes?.length > 0 ? outcomes.map(o => o.value) : OUTCOMES).map(o => <option key={o} value={o}>{o}</option>)}
                         </select>
                       </div>
                       <textarea 
