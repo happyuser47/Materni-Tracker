@@ -10,6 +10,7 @@ import CalendarPage from './pages/CalendarPage';
 import TeamPerformance from './pages/TeamPerformance';
 import PatientDirectory from './pages/PatientDirectory';
 import SettingsPage from './pages/SettingsPage';
+import ProfilePage from './pages/ProfilePage';
 import PatientDetailModal from './components/PatientDetailModal';
 import AddPatientModal from './components/AddPatientModal';
 import ConfirmModal from './components/ConfirmModal';
@@ -91,6 +92,7 @@ const AppContent = () => {
           <div className={activeTab === 'team' ? 'block' : 'hidden'}><TeamPerformance /></div>
           <div className={activeTab === 'patients' ? 'block' : 'hidden'}><PatientDirectory /></div>
           <div className={activeTab === 'settings' ? 'block' : 'hidden'}><SettingsPage /></div>
+          <div className={activeTab === 'profile' ? 'block' : 'hidden'}><ProfilePage /></div>
         </div>
       </main>
       <PatientDetailModal />

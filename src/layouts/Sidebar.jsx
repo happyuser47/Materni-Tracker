@@ -9,7 +9,7 @@ import {
 
 
 export default function Sidebar() {
-  const { activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, currentUser, setFilterAssignedTo, requestConfirm } = useApp();
+  const { activeTab, setActiveTab, isSidebarOpen, setIsSidebarOpen, currentUser, setFilterAssignedTo, requestConfirm, setShowProfileModal } = useApp();
   const { userFullName } = useAuth();
 
   if (!currentUser) return null;
@@ -218,26 +218,75 @@ export default function Sidebar() {
           </div>
         </nav>
 
-        {/* User Profile & Logout */}
-        <div className={`border-t border-slate-200 shrink-0 bg-slate-50/80 transition-all duration-300 flex overflow-hidden ${isSidebarOpen ? 'p-4 items-center h-[76px]' : 'p-0 items-center justify-center h-[76px]'}`}>
+        {/* User Profile & Account Settings Button */}
+        <div className={`border-t border-slate-200 shrink-0 bg-slate-50/80 transition-all duration-300 flex overflow-hidden ${isSidebarOpen ? 'p-3 items-center h-[76px]' : 'p-0 items-center justify-center h-[76px]'}`}>
           {isSidebarOpen ? (
-            <div className="w-full flex items-center animate-in fade-in duration-300">
-              <div className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 ${currentUser?.role === 'Admin' ? 'bg-gradient-to-br from-teal-500 to-emerald-600' : 'bg-gradient-to-br from-slate-400 to-slate-500'}`}>
-                <span className="text-white text-sm font-bold">
-                  {(userFullName || currentUser?.name || '?').charAt(0).toUpperCase()}
-                </span>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('profile');
+                if (window.innerWidth < 768) setIsSidebarOpen(false);
+              }}
+              className={`w-full flex items-center p-2 rounded-xl active:scale-[0.98] transition-all cursor-pointer group text-left ${
+                activeTab === 'profile'
+                  ? 'bg-teal-50/90 border border-teal-200 ring-2 ring-teal-500/20 shadow-xs'
+                  : 'hover:bg-slate-200/70 border border-transparent'
+              }`}
+              title="Click to view & edit your profile"
+            >
+              {currentUser?.avatar_url ? (
+                <img
+                  src={currentUser.avatar_url}
+                  alt={userFullName || currentUser?.name}
+                  className="h-10 w-10 rounded-full object-cover shrink-0 ring-2 ring-teal-500/40 shadow-sm"
+                />
+              ) : (
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ${currentUser?.role === 'Admin' ? 'bg-gradient-to-br from-teal-500 to-emerald-600' : 'bg-gradient-to-br from-slate-400 to-slate-500'}`}>
+                  <span className="text-white text-sm font-bold">
+                    {(userFullName || currentUser?.name || '?').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div className="ml-3 min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <p className={`text-sm font-bold truncate transition-colors ${activeTab === 'profile' ? 'text-teal-900' : 'text-slate-800 group-hover:text-teal-700'}`}>
+                    {userFullName || currentUser?.name}
+                  </p>
+                  <span className={`text-[10px] font-medium transition-opacity ${activeTab === 'profile' ? 'text-teal-700 opacity-100' : 'text-teal-600 opacity-0 group-hover:opacity-100'}`}>
+                    Profile ⚙
+                  </span>
+                </div>
+                <p className={`text-[11px] font-medium ${activeTab === 'profile' ? 'text-teal-700' : currentUser?.role === 'Admin' ? 'text-teal-600' : 'text-slate-400'}`}>
+                  {currentUser?.role}
+                </p>
               </div>
-              <div className="ml-3 min-w-0">
-                <p className="text-sm font-semibold text-slate-800 truncate">{userFullName || currentUser?.name}</p>
-                <p className={`text-[11px] font-medium ${currentUser?.role === 'Admin' ? 'text-teal-600' : 'text-slate-400'}`}>{currentUser?.role}</p>
-              </div>
-            </div>
+            </button>
           ) : (
-            <div className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 ${currentUser?.role === 'Admin' ? 'bg-gradient-to-br from-teal-500 to-emerald-600' : 'bg-gradient-to-br from-slate-400 to-slate-500'}`}>
-              <span className="text-white text-sm font-bold">
-                {(userFullName || currentUser?.name || '?').charAt(0).toUpperCase()}
-              </span>
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('profile');
+                if (window.innerWidth < 768) setIsSidebarOpen(false);
+              }}
+              className={`p-1 rounded-full transition-all cursor-pointer ${
+                activeTab === 'profile' ? 'ring-2 ring-teal-600 bg-teal-50' : 'hover:ring-2 hover:ring-teal-500/50'
+              }`}
+              title="My Profile & Account"
+            >
+              {currentUser?.avatar_url ? (
+                <img
+                  src={currentUser.avatar_url}
+                  alt={userFullName || currentUser?.name}
+                  className="h-9 w-9 rounded-full object-cover ring-2 ring-teal-500/40 shadow-sm"
+                />
+              ) : (
+                <div className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 shadow-sm ${currentUser?.role === 'Admin' ? 'bg-gradient-to-br from-teal-500 to-emerald-600' : 'bg-gradient-to-br from-slate-400 to-slate-500'}`}>
+                  <span className="text-white text-sm font-bold">
+                    {(userFullName || currentUser?.name || '?').charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </button>
           )}
         </div>
       </aside>

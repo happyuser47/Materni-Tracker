@@ -4,11 +4,12 @@ import {
   BellRing, AlertCircle, Upload, Download, FileSpreadsheet,
   Briefcase, Trash2, CheckCircle2, UserCircle, Database, Settings,
   Users, ListChecks, ShieldAlert, Mail, Lock, Loader2, Eye, EyeOff, Skull, AlertTriangle,
-  X, ArrowUpRight, Info
+  X, ArrowUpRight, Info, Camera, KeyRound, Save, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ManageListCard } from '../components/ManageListCard';
 import { generateCSVTemplate, exportDataToCSV } from '../utils/helpers';
+import { supabase } from '../lib/supabase';
 
 const SETTINGS_TABS = [
   { id: 'staff', label: 'Staff & Roles', icon: Users, adminOnly: true },
@@ -20,14 +21,16 @@ const SETTINGS_TABS = [
 
 export default function SettingsPage() {
   const {
+    setActiveTab,
     patients, importStatus, setImportStatus, fileInputRef,
     requestConfirm, areas, castes, references, outcomes, staffMembers,
-    alertConfig, currentUser, isSuperAdmin, handleAddStaff,
+    alertConfig, currentUser, setCurrentUser, isSuperAdmin, handleAddStaff,
     handleDeleteStaff, handleFileUpload, handleModifyList, handleUpdateSettings,
     handleWipeAllPatients, batchProgress,
-    pdfImportPreview, cancelPdfImport, confirmPdfImport
+    pdfImportPreview, cancelPdfImport, confirmPdfImport,
+    setToastMessage
   } = useApp();
-  const { login, user } = useAuth();
+  const { login, user, userFullName, fetchUserProfile } = useAuth();
 
   const visibleTabs = SETTINGS_TABS.filter(t => {
     if (t.superAdminOnly) return isSuperAdmin;

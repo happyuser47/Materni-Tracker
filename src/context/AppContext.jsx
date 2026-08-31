@@ -50,6 +50,7 @@ export const AppProvider = ({ children }) => {
   const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [isClosingCase, setIsClosingCase] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [addError, setAddError] = useState('');
   const [importStatus, setImportStatus] = useState(null);
   const [pdfImportPreview, setPdfImportPreview] = useState(null); // { rows, mapping, formatLabel, fileName }
@@ -399,7 +400,8 @@ export const AppProvider = ({ children }) => {
       if (authUser) {
         const matchedStaff = staffData.find(s => s.auth_id === authUser.id);
         if (matchedStaff) {
-          setCurrentUser(matchedStaff);
+          const savedAvatar = localStorage.getItem(`maternitrack_avatar_${matchedStaff.id}`) || matchedStaff.avatar_url || authUser.user_metadata?.avatar_url || '';
+          setCurrentUser({ ...matchedStaff, avatar_url: savedAvatar });
         } else {
           console.warn('Auth user found but no matching public.staff record exists.');
           // We don't call setIsLoading(false) yet, or we let it finish and handle null currentUser in UI
@@ -1104,6 +1106,8 @@ Status: ${patient.status}`;
     setIsClosingCase,
     showAddModal,
     setShowAddModal,
+    showProfileModal,
+    setShowProfileModal,
     addError,
     setAddError,
     importStatus,
@@ -1226,7 +1230,7 @@ Status: ${patient.status}`;
     displayDashAlerts
   }), [
     isLoading, isSuperAdmin, activeTab, patients, selectedPatient, editingInteractionId, 
-    isEditingDetails, isClosingCase, showAddModal, addError, importStatus, pdfImportPreview,
+    isEditingDetails, isClosingCase, showAddModal, showProfileModal, addError, importStatus, pdfImportPreview,
     showNotifications, showFilters, isSidebarOpen, toastMessage, confirmDialog,
     calendarDate, areas, castes, references, tags, outcomes, staffMembers, alertConfig, currentUser,
     searchTerm, filterIntent, filterArea, filterCaste, filterReference, filterTag, filterAssignedTo, filterAssignmentType,

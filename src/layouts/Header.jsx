@@ -8,7 +8,7 @@ import { calculateDaysUntil, formatDate, getPatientAlertType } from '../utils/he
 
 
 export default function Header() {
-  const { activeTab, setActiveTab, setSelectedPatient, showNotifications, setShowNotifications, isSidebarOpen, setIsSidebarOpen, currentUser, alertConfig, requestConfirm, dismissAlert, dismissAllAlerts, displayBellAlerts } = useApp();
+  const { activeTab, setActiveTab, setSelectedPatient, showNotifications, setShowNotifications, isSidebarOpen, setIsSidebarOpen, currentUser, alertConfig, requestConfirm, dismissAlert, dismissAllAlerts, displayBellAlerts, setShowProfileModal } = useApp();
   const { logout, userFullName } = useAuth();
 
   const handleLogout = () => {
@@ -32,7 +32,7 @@ export default function Header() {
         <div className="flex items-center">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="md:hidden p-2 -ml-2 mr-1 flex items-center justify-center text-slate-500 hover:text-teal-600 transition-colors rounded-lg hover:bg-slate-100"
+            className="md:hidden p-2 -ml-2 mr-1 flex items-center justify-center text-slate-500 hover:text-teal-600 transition-colors rounded-lg hover:bg-slate-100 cursor-pointer"
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -40,23 +40,55 @@ export default function Header() {
             <span className="text-lg font-bold text-slate-800 truncate">MaterniTrack</span>
           </div>
           <div className="hidden md:flex items-center text-sm text-slate-500">
-            {formatDate(new Date().toISOString().split('T')[0])} • Welcome, <span className="font-medium text-slate-700 ml-1">{userFullName || currentUser?.name}</span>
+            {formatDate(new Date().toISOString().split('T')[0])} • Welcome,{' '}
+            <button
+              type="button"
+              onClick={() => setActiveTab('profile')}
+              className="font-semibold text-slate-800 hover:text-teal-600 hover:underline ml-1 cursor-pointer transition-colors"
+              title="Click to view profile"
+            >
+              {userFullName || currentUser?.name}
+            </button>
           </div>
         </div>
-        <div className="flex items-center space-x-1 md:space-x-3 shrink-0">
+        <div className="flex items-center space-x-1.5 md:space-x-3 shrink-0">
           {currentUser?.role === 'Admin' && (
             <button
               onClick={() => setActiveTab('team')}
-              className="md:hidden relative p-2 text-slate-400 hover:text-teal-600 transition-colors"
+              className="md:hidden relative p-2 text-slate-400 hover:text-teal-600 transition-colors cursor-pointer"
             >
               <BarChart2 className="h-5 w-5" />
             </button>
           )}
           <button
             onClick={() => setActiveTab('settings')}
-            className="md:hidden relative p-2 text-slate-400 hover:text-slate-600 transition-colors"
+            className="md:hidden relative p-2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
           >
             <Settings className="h-5 w-5" />
+          </button>
+
+          {/* Quick Profile Avatar Button */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('profile')}
+            className={`flex items-center p-0.5 rounded-full transition-all cursor-pointer ${
+              activeTab === 'profile' ? 'ring-2 ring-teal-600 bg-teal-50' : 'hover:ring-2 hover:ring-teal-500/50'
+            }`}
+            title="My Profile & Settings"
+          >
+            {currentUser?.avatar_url ? (
+              <img
+                src={currentUser.avatar_url}
+                alt={userFullName || currentUser?.name}
+                className="h-8 w-8 rounded-full object-cover ring-2 ring-teal-500/30 shadow-xs"
+              />
+            ) : (
+              <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 shadow-xs ${currentUser?.role === 'Admin' ? 'bg-gradient-to-br from-teal-500 to-emerald-600' : 'bg-gradient-to-br from-slate-400 to-slate-500'}`}>
+                <span className="text-white text-xs font-bold">
+                  {(userFullName || currentUser?.name || '?').charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
           </button>
 
           {/* NOTIFICATIONS DROPDOWN */}
