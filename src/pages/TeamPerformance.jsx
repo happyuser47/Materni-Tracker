@@ -18,10 +18,19 @@ export default function TeamPerformance() {
   const {
     patients, setSelectedPatient, setActiveTab, setFilterAssignedTo,
     setFilterStatus, activityDateFilter, setActivityDateFilter,
-    activitySummary, teamPerformance, filteredActivities, activeTab
+    activitySummary, teamPerformance, filteredActivities, activeTab,
+    staffMembers
   } = useApp();
 
   const [activeTeamTab, setActiveTeamTab] = useState('overview');
+
+  const staffAvatarMap = useMemo(() => {
+    const map = {};
+    (staffMembers || []).forEach(s => {
+      if (s.name && s.avatar_url) map[s.name] = s.avatar_url;
+    });
+    return map;
+  }, [staffMembers]);
 
   // Compute totals for overview
   const totals = useMemo(() => {
@@ -131,9 +140,17 @@ export default function TeamPerformance() {
                 {/* Card Header */}
                 <div className={`p-5 border-b border-slate-100 flex items-center justify-between ${staff.role === 'Admin' ? 'bg-gradient-to-r from-teal-50/70 to-white' : 'bg-gradient-to-r from-teal-50/30 to-white'}`}>
                   <div className="flex items-center min-w-0">
-                    <div className={`h-11 w-11 rounded-full flex items-center justify-center text-white font-bold mr-3 shrink-0 shadow-sm ${staff.role === 'Admin' ? 'bg-gradient-to-br from-teal-600 to-teal-800' : 'bg-gradient-to-br from-teal-500 to-teal-700'}`}>
-                      {staff.name.charAt(0)}
-                    </div>
+                    {staff.avatar_url || staffAvatarMap[staff.name] ? (
+                      <img 
+                        src={staff.avatar_url || staffAvatarMap[staff.name]} 
+                        alt={staff.name} 
+                        className="h-11 w-11 rounded-full object-cover mr-3 shrink-0 shadow-sm ring-2 ring-teal-500/20" 
+                      />
+                    ) : (
+                      <div className={`h-11 w-11 rounded-full flex items-center justify-center text-white font-bold mr-3 shrink-0 shadow-sm ${staff.role === 'Admin' ? 'bg-gradient-to-br from-teal-600 to-teal-800' : 'bg-gradient-to-br from-teal-500 to-teal-700'}`}>
+                        {staff.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <div className="min-w-0 pr-2">
                       <h3 className="font-bold text-slate-900 truncate">{staff.name}</h3>
                       <Badge type={staff.role}>{staff.role}</Badge>
@@ -205,9 +222,17 @@ export default function TeamPerformance() {
             <div className="bg-gradient-to-r from-teal-600 to-teal-800 rounded-2xl p-5 md:p-6 text-white shadow-lg shadow-teal-200/40">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-lg">
-                    {totals.topPerformer.name.charAt(0)}
-                  </div>
+                  {totals.topPerformer && staffAvatarMap[totals.topPerformer.name] ? (
+                    <img 
+                      src={staffAvatarMap[totals.topPerformer.name]} 
+                      alt={totals.topPerformer.name} 
+                      className="h-12 w-12 rounded-full object-cover ring-2 ring-white/30 shrink-0 shadow-sm" 
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-lg">
+                      {totals.topPerformer ? totals.topPerformer.name.charAt(0).toUpperCase() : '?'}
+                    </div>
+                  )}
                   <div>
                     <p className="text-teal-100 text-xs font-semibold uppercase tracking-wider">Top Performer {activityDateFilter ? `(${formatDate(activityDateFilter)})` : '(All Time)'}</p>
                     <p className="text-xl font-bold">{totals.topPerformer.name}</p>
@@ -259,9 +284,17 @@ export default function TeamPerformance() {
                 <div key={stat.name} className={`p-4 ${idx === 0 && stat.total > 0 ? 'bg-emerald-50/30' : ''}`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2.5">
-                      <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 ${stat.role === 'Admin' ? 'bg-gradient-to-br from-teal-600 to-teal-800' : 'bg-gradient-to-br from-teal-500 to-teal-700'}`}>
-                        {stat.name.charAt(0)}
-                      </div>
+                      {staffAvatarMap[stat.name] ? (
+                        <img 
+                          src={staffAvatarMap[stat.name]} 
+                          alt={stat.name} 
+                          className="h-9 w-9 rounded-full object-cover shrink-0 ring-1 ring-slate-200" 
+                        />
+                      ) : (
+                        <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0 ${stat.role === 'Admin' ? 'bg-gradient-to-br from-teal-600 to-teal-800' : 'bg-gradient-to-br from-teal-500 to-teal-700'}`}>
+                          {stat.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
                       <div>
                         <span className="font-semibold text-slate-900 text-sm">{stat.name}</span>
                         {idx === 0 && stat.total > 0 && (
@@ -314,9 +347,17 @@ export default function TeamPerformance() {
                     <tr key={stat.name} className={`hover:bg-slate-50/80 transition-colors ${idx === 0 && stat.total > 0 ? 'bg-emerald-50/30' : ''}`}>
                       <td className="p-4">
                         <div className="flex items-center">
-                          <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white font-bold mr-3 text-xs shrink-0 ${stat.role === 'Admin' ? 'bg-gradient-to-br from-teal-600 to-teal-800' : 'bg-gradient-to-br from-teal-500 to-teal-700'}`}>
-                            {stat.name.charAt(0)}
-                          </div>
+                          {staffAvatarMap[stat.name] ? (
+                            <img 
+                              src={staffAvatarMap[stat.name]} 
+                              alt={stat.name} 
+                              className="h-9 w-9 rounded-full object-cover mr-3 shrink-0 ring-1 ring-slate-200" 
+                            />
+                          ) : (
+                            <div className={`h-9 w-9 rounded-full flex items-center justify-center text-white font-bold mr-3 text-xs shrink-0 ${stat.role === 'Admin' ? 'bg-gradient-to-br from-teal-600 to-teal-800' : 'bg-gradient-to-br from-teal-500 to-teal-700'}`}>
+                              {stat.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div>
                             <span className="font-semibold text-slate-900 text-sm">{stat.name}</span>
                             {idx === 0 && stat.total > 0 && (
@@ -386,15 +427,23 @@ export default function TeamPerformance() {
                   >
                     {/* Timeline Avatar */}
                     <div className="flex flex-col items-center shrink-0">
-                      <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm ${
-                        activity.type === 'Outcome Logged' ? 'bg-gradient-to-br from-slate-700 to-slate-900' :
-                        activity.type === 'Call' ? 'bg-gradient-to-br from-teal-400 to-teal-600' :
-                        activity.type === 'Visit' ? 'bg-gradient-to-br from-teal-500 to-teal-700' :
-                        activity.type === 'Referral' ? 'bg-gradient-to-br from-teal-600 to-teal-800' :
-                        'bg-gradient-to-br from-teal-500 to-teal-700'
-                      }`}>
-                        {activity.staff.charAt(0)}
-                      </div>
+                      {staffAvatarMap[activity.staff] ? (
+                        <img 
+                          src={staffAvatarMap[activity.staff]} 
+                          alt={activity.staff} 
+                          className="h-8 w-8 sm:h-10 sm:w-10 rounded-full object-cover shadow-sm ring-1 ring-slate-200" 
+                        />
+                      ) : (
+                        <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center text-white font-bold text-xs shadow-sm ${
+                          activity.type === 'Outcome Logged' ? 'bg-slate-700' :
+                          activity.type === 'Call' ? 'bg-teal-500' :
+                          activity.type === 'Visit' ? 'bg-teal-600' :
+                          activity.type === 'Referral' ? 'bg-emerald-600' :
+                          'bg-teal-600'
+                        }`}>
+                          {activity.staff ? activity.staff.charAt(0).toUpperCase() : '?'}
+                        </div>
+                      )}
                       {index < filteredActivities.length - 1 && (
                         <div className="w-px flex-1 bg-slate-200 mt-2 min-h-[20px]" />
                       )}

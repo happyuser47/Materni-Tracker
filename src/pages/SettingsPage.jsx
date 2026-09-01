@@ -260,13 +260,21 @@ export default function SettingsPage() {
                 {staffMembers.map(staff => (
                   <div key={staff.id} className="group flex items-center justify-between bg-slate-50/70 hover:bg-white border border-slate-100 hover:border-slate-200 p-3.5 rounded-xl transition-all duration-200 hover:shadow-sm">
                     <div className="flex items-center overflow-hidden pr-2">
-                      <div className={`h-9 w-9 rounded-full flex items-center justify-center mr-3 shrink-0 ${staff.role === 'Admin' ? 'bg-gradient-to-br from-teal-500 to-emerald-600' : 'bg-slate-100'}`}>
-                        {staff.role === 'Admin' ? (
-                          <span className="text-white text-sm font-bold">{staff.name.charAt(0).toUpperCase()}</span>
-                        ) : (
-                          <UserCircle className="h-5 w-5 text-slate-400" />
-                        )}
-                      </div>
+                      {staff.avatar_url ? (
+                        <img 
+                          src={staff.avatar_url} 
+                          alt={staff.name} 
+                          className="h-9 w-9 rounded-full object-cover mr-3 shrink-0 ring-1 ring-slate-200" 
+                        />
+                      ) : (
+                        <div className={`h-9 w-9 rounded-full flex items-center justify-center mr-3 shrink-0 ${staff.role === 'Admin' ? 'bg-gradient-to-br from-teal-500 to-emerald-600' : 'bg-slate-100'}`}>
+                          {staff.role === 'Admin' ? (
+                            <span className="text-white text-sm font-bold">{staff.name.charAt(0).toUpperCase()}</span>
+                          ) : (
+                            <UserCircle className="h-5 w-5 text-slate-400" />
+                          )}
+                        </div>
+                      )}
                       <div className="truncate">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-semibold text-slate-800 truncate">{staff.name}</p>

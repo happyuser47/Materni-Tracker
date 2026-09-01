@@ -395,16 +395,32 @@ export const AppProvider = ({ children }) => {
     // Fetch Staff
     const { data: staffData } = await supabase.from('staff').select('*').order('created_at');
     if (staffData && staffData.length > 0) {
-      setStaffMembers(staffData);
+      const hydratedStaff = staffData.map(s => {
+        let avatar = s.avatar_url;
+        if (!avatar && authUser && s.auth_id === authUser.id) {
+          avatar = localStorage.getItem(`maternitrack_avatar_${s.id}`) || authUser.user_metadata?.avatar_url || '';
+        } else if (!avatar) {
+          avatar = localStorage.getItem(`maternitrack_avatar_${s.id}`) || '';
+        }
+        // Auto backfill to Supabase if local avatar exists but staff.avatar_url is null
+        if (!s.avatar_url && avatar) {
+          supabase.from('staff').update({ avatar_url: avatar }).eq('id', s.id).then();
+        }
+        return {
+          ...s,
+          avatar_url: avatar
+        };
+      });
+
+      setStaffMembers(hydratedStaff);
+
       // Set current user based on authenticated user's auth_id
       if (authUser) {
-        const matchedStaff = staffData.find(s => s.auth_id === authUser.id);
+        const matchedStaff = hydratedStaff.find(s => s.auth_id === authUser.id);
         if (matchedStaff) {
-          const savedAvatar = localStorage.getItem(`maternitrack_avatar_${matchedStaff.id}`) || matchedStaff.avatar_url || authUser.user_metadata?.avatar_url || '';
-          setCurrentUser({ ...matchedStaff, avatar_url: savedAvatar });
+          setCurrentUser(matchedStaff);
         } else {
           console.warn('Auth user found but no matching public.staff record exists.');
-          // We don't call setIsLoading(false) yet, or we let it finish and handle null currentUser in UI
         }
       }
     }
@@ -504,13 +520,19 @@ export const AppProvider = ({ children }) => {
 
     // Persist to Supabase
     try {
-      await supabase.from('patients').update({ tags: updatedTags }).eq('id', patient.uuid);
+      const targetQuery = patient.uuid
+        ? supabase.from('patients').update({ tags: updatedTags }).eq('id', patient.uuid)
+        : supabase.from('patients').update({ tags: updatedTags }).eq('cnic', patient.id);
+      const { error } = await targetQuery;
+      if (error) {
+        console.error('Supabase tag update error:', error);
+      }
     } catch (err) {
       console.warn('Supabase tag update notice:', err);
     }
 
     // If new tag not yet in master list, also save to custom_lists
-    if (!tags.some(t => t.value.toLowerCase() === trimmed.toLowerCase())) {
+    if (!hasTag && !tags.some(t => t.value.toLowerCase() === trimmed.toLowerCase())) {
       handleModifyList('tag', 'add', trimmed);
     }
 
@@ -583,6 +605,15 @@ export const AppProvider = ({ children }) => {
       }]
     };
 
+    // If any new tags were entered, save to custom_lists
+    if (Array.isArray(patientTags)) {
+      patientTags.forEach(tag => {
+        if (!tags.some(t => t.value.toLowerCase() === tag.toLowerCase())) {
+          handleModifyList('tag', 'add', tag);
+        }
+      });
+    }
+
     setPatients([mappedPatient, ...patients]);
     setShowAddModal(false);
     setAddError('');
@@ -613,9 +644,24 @@ export const AppProvider = ({ children }) => {
     };
 
     try {
-      await supabase.from('patients').update(updates).eq('id', selectedPatient.uuid);
+      const targetQuery = selectedPatient.uuid
+        ? supabase.from('patients').update(updates).eq('id', selectedPatient.uuid)
+        : supabase.from('patients').update(updates).eq('cnic', selectedPatient.id);
+      const { error } = await targetQuery;
+      if (error) {
+        console.error('Failed to update patient details in Supabase:', error);
+      }
     } catch (err) {
       console.warn('Supabase update warning:', err);
+    }
+
+    // If any new tags were entered, save to custom_lists
+    if (Array.isArray(patientTags)) {
+      patientTags.forEach(tag => {
+        if (!tags.some(t => t.value.toLowerCase() === tag.toLowerCase())) {
+          handleModifyList('tag', 'add', tag);
+        }
+      });
     }
 
     setPatients(prev => prev.map(p => {

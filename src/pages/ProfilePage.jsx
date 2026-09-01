@@ -9,10 +9,10 @@ import {
 } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { currentUser, setCurrentUser, setToastMessage, requestConfirm } = useApp();
+  const { currentUser, setCurrentUser, setToastMessage, requestConfirm, setStaffMembers } = useApp();
   const { user, userFullName, fetchUserProfile, logout, isSuperAdmin } = useAuth();
 
-  const [activeSection, setActiveSection] = useState('profile'); // 'profile', 'email', 'password'
+  const [activeSection, setActiveSection] = useState('profile'); // 'profile', 'password'
 
   // General Profile State
   const [fullName, setFullName] = useState(currentUser?.name || userFullName || '');
@@ -94,10 +94,19 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
-  const handleRemoveAvatar = () => {
+  const handleRemoveAvatar = async () => {
     setAvatarUrl('');
     if (currentUser?.id) {
       localStorage.removeItem(`maternitrack_avatar_${currentUser.id}`);
+      try {
+        await supabase.from('staff').update({ avatar_url: null }).eq('id', currentUser.id);
+      } catch (err) {
+        console.warn('Remove avatar error:', err);
+      }
+      setCurrentUser(prev => prev ? { ...prev, avatar_url: '' } : null);
+      if (setStaffMembers) {
+        setStaffMembers(prev => prev.map(s => s.id === currentUser.id ? { ...s, avatar_url: '' } : s));
+      }
     }
   };
 
@@ -125,20 +134,12 @@ export default function ProfilePage() {
         }
       });
 
-      // 2. Update staff table record
+      // 2. Update staff table record in Supabase
       if (currentUser?.id) {
-        try {
-          await supabase
-            .from('staff')
-            .update({ name: updatedName, avatar_url: avatarUrl || null })
-            .eq('id', currentUser.id);
-        } catch {
-          // Fallback if avatar_url column is not present in staff table schema
-          await supabase
-            .from('staff')
-            .update({ name: updatedName })
-            .eq('id', currentUser.id);
-        }
+        await supabase
+          .from('staff')
+          .update({ name: updatedName, avatar_url: avatarUrl || null })
+          .eq('id', currentUser.id);
 
         // Cache avatar in local storage
         if (avatarUrl) {
@@ -149,6 +150,9 @@ export default function ProfilePage() {
 
         // 3. Update React App context state
         setCurrentUser(prev => prev ? { ...prev, name: updatedName, avatar_url: avatarUrl } : null);
+        if (setStaffMembers) {
+          setStaffMembers(prev => prev.map(s => s.id === currentUser.id ? { ...s, name: updatedName, avatar_url: avatarUrl } : s));
+        }
       }
 
       if (user?.id) {
